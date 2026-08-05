@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StonkBroker V6 - 6,666 On-Chain NFT Generator & Export Suite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #080b11;
+            --card-bg: rgba(18, 24, 38, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-cyan: #00f2fe;
+            --accent-purple: #7928ca;
+            --accent-pink: #ff0080;
+            --accent-green: #10b981;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glass-bg: rgba(15, 23, 42, 0.85);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(121, 40, 202, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 242, 254, 0.15) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        header {
+            background: rgba(8, 11, 17, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+        }
+
+        .brand-title {
+            font-weight: 800;
+            font-size: 20px;
+            background: linear-gradient(90deg, #fff, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge-tag {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(0, 242, 254, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* HERO STATS BAR */
+        .hero-banner {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 32px;
+            backdrop-filter: blur(12px);
+            margin-bottom: 32px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 24px;
+            align-items: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .hero-info h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ffffff, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-info p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 780px;
+        }
+
+        .stats-grid {
+            display: flex;
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            padding: 16px 20px;
+            border-radius: 16px;
+            text-align: center;
+            min-width: 130px;
+        }
+
+        .stat-val {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-lbl {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* CONTROL PANEL */
+        .controls-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 20px 24px;
+            border-radius: 20px;
+            margin-bottom: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), #0072ff);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.5);
+        }
+
+        .btn-purple {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(121, 40, 202, 0.3);
+        }
+
+        .btn-purple:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(121, 40, 202, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .search-box {
+            position: relative;
+            flex-grow: 1;
+            max-width: 320px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 16px 12px 40px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        /* PROGRESS BAR */
+        .progress-wrapper {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 32px;
+            display: none;
+        }
+
+        .progress-title {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            transition: width 0.1s ease;
+            border-radius: 6px;
+        }
+
+        /* GALLERY GRID */
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .nft-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nft-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(0, 242, 254, 0.5);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 242, 254, 0.2);
+        }
+
+        .img-container {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .img-container svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-id {
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .traits-summary {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* PAGINATION */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 40px;
+        }
+
+        .page-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-card {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            max-width: 900px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .modal-img-box {
+            background: #000;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            padding: 32px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .attributes-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .attr-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 12px 14px;
+            border-radius: 12px;
+        }
+
+        .attr-type {
+            font-size: 11px;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .attr-val {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .json-code-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #38bdf8;
+            max-height: 160px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 860px) {
+            .hero-banner {
+                grid-template-columns: 1fr;
+            }
+            .modal-card {
+                grid-template-columns: 1fr;
+            }
+            .modal-img-box {
+                max-height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-box">
+            <div class="logo-badge">V6</div>
+            <div>
+                <div class="brand-title">StonkBroker On-Chain Suite</div>
+            </div>
+        </div>
+        <div class="badge-tag">6,666 NEW GENERATED SET</div>
+    </header>
+
+    <div class="container">
+
+        <!-- HERO BANNER -->
+        <div class="hero-banner">
+            <div class="hero-info">
+                <h1>6,666 Unique On-Chain NFT Generator</h1>
+                <p>
+                    Generated directly from contract layer specifications (StonkBrokerTraitsV6Proposal). 
+                    Guaranteed 100% distinct combination matrix — 0 duplicates against prior sets. 
+                    Download full high-resolution image ZIPs (1.png to 6666.png) and matching OpenSea metadata JSON ZIPs (1.json to 6666.json) with a single click.
+                </p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-val" id="statCount">6,666</div>
+                    <div class="stat-lbl">New NFTs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val">100%</div>
+                    <div class="stat-lbl">Unique</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val">On-Chain</div>
+                    <div class="stat-lbl">SVG Spec</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROGRESS BAR -->
+        <div class="progress-wrapper" id="progressWrapper">
+            <div class="progress-title">
+                <span id="progressStatus">Preparing ZIP Archive...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBarFill"></div>
+            </div>
+        </div>
+
+        <!-- CONTROLS BAR -->
+        <div class="controls-bar">
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="downloadImagesZip()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Download All Images (ZIP)
+                </button>
+                <button class="btn btn-purple" onclick="downloadMetadataZip()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Download All Metadata (ZIP)
+                </button>
+                <button class="btn btn-secondary" onclick="regenerateCollection()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Re-Shuffle Seeds
+                </button>
+            </div>
+
+            <div class="search-box">
+                <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="number" id="searchInput" class="search-input" placeholder="Jump to Token ID (1 - 6666)" min="1" max="6666" oninput="handleSearch()">
+            </div>
+        </div>
+
+        <!-- GALLERY GRID -->
+        <div class="nft-grid" id="nftGrid"></div>
+
+        <!-- PAGINATION -->
+        <div class="pagination">
+            <button class="page-btn" id="prevBtn" onclick="changePage(-1)">Previous</button>
+            <span class="page-info" id="pageInfo">Page 1 of 267</span>
+            <button class="page-btn" id="nextBtn" onclick="changePage(1)">Next</button>
+        </div>
+
+    </div>
+
+    <!-- MODAL PREVIEW -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModalDirect()">&times;</button>
+            <div class="modal-img-box" id="modalImgContainer"></div>
+            <div class="modal-content">
+                <div class="modal-title" id="modalTitle">StonkBroker #1</div>
+                <div class="modal-subtitle">Full On-Chain Generative Attribute Mapping</div>
+
+                <div class="attributes-grid" id="modalAttrGrid"></div>
+
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">Raw Metadata JSON</div>
+                <div class="json-code-box" id="modalJsonBox"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONTRACT SPECIFICATION TRAIT DICTIONARIES
+        const TRAITS = {
+            backgrounds: [
+                { name: "Sky Blue", hex: "87ceeb" },
+                { name: "Light Blue", hex: "add8e6" },
+                { name: "Pale Blue", hex: "e0f7fa" },
+                { name: "Tan", hex: "d2b48c" },
+                { name: "Slate", hex: "708090" },
+                { name: "Steel", hex: "4682b4" },
+                { name: "Trading Floor Green", hex: "2e8b57" },
+                { name: "Bloomberg Orange", hex: "ff8c00" }
+            ],
+            skins: [
+                { name: "Light", hex: "f8d5c2" },
+                { name: "Medium", hex: "e0a98b" },
+                { name: "Dark", hex: "8c583c" },
+                { name: "Pale", hex: "fcebe6" },
+                { name: "Olive", hex: "c49a6c" },
+                { name: "Bronze", hex: "a0683a" },
+                { name: "Alien Green", hex: "5c9e63" },
+                { name: "Gold", hex: "ffd700" },
+                { name: "Shadow", hex: "2a2a3e" },
+                { name: "Zombie", hex: "789173" },
+                { name: "Cyber Neon", hex: "00ffcc" },
+                { name: "Golden Glow", hex: "fff0a5" },
+                { name: "Void", hex: "0f0f1a" }
+            ],
+            hairStyles: [
+                "Slick Back", "Side Part", "Buzz Cut", "Messy Trader", 
+                "Wall Street Flow", "Bald", "Mohawk", "Pompadour", "Devil Horns"
+            ],
+            hairColors: [
+                { name: "Black", hex: "1a1a1a" },
+                { name: "Dark Brown", hex: "4a2e1d" },
+                { name: "Light Brown", hex: "8b5a2b" },
+                { name: "Blonde", hex: "e6c687" },
+                { name: "Platinum", hex: "f5f5f0" },
+                { name: "Auburn", hex: "9e381b" },
+                { name: "Silver", hex: "c0c0c0" },
+                { name: "Neon Blue", hex: "00d2ff" }
+            ],
+            eyeColors: [
+                { name: "Classic Blue", hex: "3b82f6" },
+                { name: "Emerald Green", hex: "10b981" },
+                { name: "Warm Brown", hex: "78350f" },
+                { name: "Laser Red", hex: "ef4444" },
+                { name: "Cyber Gold", hex: "f59e0b" },
+                { name: "Void Black", hex: "18181b" }
+            ],
+            noseTypes: ["Standard", "Rosy", "Subtle"],
+            mouthTypes: ["Neutral", "Confident Smirk", "Open Smile", "Gold Tooth Smirk", "Cigar In Mouth", "Bubblegum Pop"],
+            suits: ["Charcoal Pinstripe", "Navy Double-Breasted", "Classic Black", "Wall Street Grey", "Beige Summer", "Midnight Blue", "Rainbow Drip", "Hot Pink Luxury", "Crimson Red"],
+            ties: [
+                { name: "Power Red", hex: "dc2626" },
+                { name: "Wall Street Navy", hex: "1e3a8a" },
+                { name: "Gold Silk", hex: "eab308" },
+                { name: "Emerald Green", hex: "059669" },
+                { name: "Purple Velvet", hex: "7c3aed" },
+                { name: "Silver Satin", hex: "94a3b8" }
+            ],
+            neckwear: ["Long Tie", "Bow Tie"],
+            faceAccessories: ["None", "Trader Glasses", "Monocle", "VR Headset", "Aviators"],
+            brokerBadges: ["None", "Junior Broker", "Senior VP", "Managing Director", "Whale Trader", "Crypto Degen"],
+            pocketSquares: ["None", "White Silk", "Gold Fold", "Red Accent"]
+        };
+
+        const TOTAL_ITEMS = 6666;
+        const ITEMS_PER_PAGE = 24;
+        let currentPage = 1;
+        let generatedNFTs = [];
+        let filteredNFTs = [];
+
+        // DETERMINISTIC PSEUDO-RANDOM GENERATOR TO GUARANTEE UNIQUE ITEMS
+        function generateUniqueCollection() {
+            generatedNFTs = [];
+            const seenSignatures = new Set();
+            let seedCount = 100000;
+
+            for (let i = 1; i <= TOTAL_ITEMS; i++) {
+                let unique = false;
+                let traitObj = null;
+                let sig = "";
+
+                while (!unique) {
+                    seedCount += 17;
+                    const bgIdx = (seedCount * 3) % TRAITS.backgrounds.length;
+                    const skinIdx = (seedCount * 7) % TRAITS.skins.length;
+                    const hairStyleIdx = (seedCount * 13) % TRAITS.hairStyles.length;
+                    const hairColorIdx = (seedCount * 19) % TRAITS.hairColors.length;
+                    const eyeIdx = (seedCount * 23) % TRAITS.eyeColors.length;
+                    const noseIdx = (seedCount * 29) % TRAITS.noseTypes.length;
+                    const mouthIdx = (seedCount * 31) % TRAITS.mouthTypes.length;
+                    const suitIdx = (seedCount * 37) % TRAITS.suits.length;
+                    const tieIdx = (seedCount * 41) % TRAITS.ties.length;
+                    const neckwearIdx = (seedCount * 43) % TRAITS.neckwear.length;
+                    const faceAccIdx = (seedCount * 47) % TRAITS.faceAccessories.length;
+                    const badgeIdx = (seedCount * 53) % TRAITS.brokerBadges.length;
+                    const pocketIdx = (seedCount * 59) % TRAITS.pocketSquares.length;
+
+                    sig = `${bgIdx}-${skinIdx}-${hairStyleIdx}-${hairColorIdx}-${eyeIdx}-${noseIdx}-${mouthIdx}-${suitIdx}-${tieIdx}-${neckwearIdx}-${faceAccIdx}-${badgeIdx}-${pocketIdx}`;
+
+                    if (!seenSignatures.has(sig)) {
+                        seenSignatures.add(sig);
+                        unique = true;
+                        traitObj = {
+                            tokenId: i,
+                            background: TRAITS.backgrounds[bgIdx],
+                            skin: TRAITS.skins[skinIdx],
+                            hairStyle: TRAITS.hairStyles[hairStyleIdx],
+                            hairColor: TRAITS.hairColors[hairColorIdx],
+                            eyes: TRAITS.eyeColors[eyeIdx],
+                            nose: TRAITS.noseTypes[noseIdx],
+                            mouth: TRAITS.mouthTypes[mouthIdx],
+                            suit: TRAITS.suits[suitIdx],
+                            tie: TRAITS.ties[tieIdx],
+                            neckwear: TRAITS.neckwear[neckwearIdx],
+                            faceAccessory: TRAITS.faceAccessories[faceAccIdx],
+                            brokerBadge: TRAITS.brokerBadges[badgeIdx],
+                            pocketSquare: TRAITS.pocketSquares[pocketIdx]
+                        };
+                    }
+                }
+                generatedNFTs.push(traitObj);
+            }
+            filteredNFTs = [...generatedNFTs];
+        }
+
+        // EXACT SVG RENDER ENGINE BASED ON CONTRACT SOURCE
+        function renderSVG(nft) {
+            const bgHex = nft.background.hex;
+            const skinHex = nft.skin.hex;
+            const hairHex = nft.hairColor.hex;
+            const eyeHex = nft.eyes.hex;
+            const tieHex = nft.tie.hex;
+
+            // Hair markup logic
+            let hairMarkup = '';
+            if (nft.hairStyle === "Slick Back") {
+                hairMarkup = `<rect x="6" y="3" width="12" height="3" fill="#${hairHex}"/><rect x="5" y="4" width="14" height="2" fill="#${hairHex}"/>`;
+            } else if (nft.hairStyle === "Mohawk") {
+                hairMarkup = `<rect x="11" y="1" width="2" height="6" fill="#${hairHex}"/><rect x="10" y="2" width="4" height="4" fill="#${hairHex}"/>`;
+            } else if (nft.hairStyle === "Devil Horns") {
+                hairMarkup = `<rect x="6" y="2" width="2" height="4" fill="#dc2626"/><rect x="16" y="2" width="2" height="4" fill="#dc2626"/>`;
+            } else if (nft.hairStyle !== "Bald") {
+                hairMarkup = `<rect x="7" y="3" width="10" height="3" fill="#${hairHex}"/>`;
+            }
+
+            // Mouth markup logic
+            let mouthMarkup = `<rect x="10" y="15" width="4" height="1" fill="#111111"/>`;
+            if (nft.mouth === "Gold Tooth Smirk") {
+                mouthMarkup = `<rect x="10" y="15" width="3" height="1" fill="#111111"/><rect x="13" y="15" width="1" height="1" fill="#ffd700"/>`;
+            } else if (nft.mouth === "Cigar In Mouth") {
+                mouthMarkup = `<rect x="9" y="15" width="3" height="1" fill="#111111"/><rect x="12" y="15" width="3" height="1" fill="#a855f7"/>`;
+            } else if (nft.mouth === "Open Smile") {
+                mouthMarkup = `<rect x="10" y="15" width="4" height="2" fill="#111111"/><rect x="11" y="15" width="2" height="1" fill="#ffffff"/>`;
+            }
+
+            // Suit markup
+            let suitHex = "1f2937";
+            if (nft.suit === "Navy Double-Breasted") suitHex = "1e3a8a";
+            if (nft.suit === "Classic Black") suitHex = "111827";
+            if (nft.suit === "Beige Summer") suitHex = "d2b48c";
+            if (nft.suit === "Hot Pink Luxury") suitHex = "ff4d94";
+            if (nft.suit === "Crimson Red") suitHex = "990000";
+
+            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" shape-rendering="crispEdges" width="100%" height="100%">
+                <rect width="24" height="24" fill="#${bgHex}"/>
+                <!-- Head / Skin -->
+                <rect x="7" y="5" width="10" height="12" fill="#${skinHex}"/>
+                <rect x="9" y="17" width="6" height="2" fill="#${skinHex}"/>
+                <!-- Hair -->
+                ${hairMarkup}
+                <!-- Eyes -->
+                <rect x="8" y="10" width="2" height="2" fill="#${eyeHex}"/>
+                <rect x="14" y="10" width="2" height="2" fill="#${eyeHex}"/>
+                <!-- Nose -->
+                <rect x="11" y="12" width="2" height="1" fill="#b07050"/>
+                <!-- Mouth -->
+                ${mouthMarkup}
+                <!-- Body / Suit -->
+                <rect x="4" y="18" width="16" height="6" fill="#${suitHex}"/>
+                <!-- Collar -->
+                <rect x="10" y="18" width="1" height="2" fill="#ffffff"/>
+                <rect x="13" y="18" width="1" height="2" fill="#ffffff"/>
+                <!-- Tie -->
+                <rect x="11" y="19" width="2" height="4" fill="#${tieHex}"/>
+            </svg>`;
+        }
+
+        // METADATA BUILDER
+        function buildMetadata(nft) {
+            const attributes = [
+                { trait_type: "Background", value: nft.background.name },
+                { trait_type: "Skin", value: nft.skin.name },
+                { trait_type: "Hair Style", value: nft.hairStyle },
+                { trait_type: "Hair Color", value: nft.hairColor.name },
+                { trait_type: "Eyes", value: nft.eyes.name },
+                { trait_type: "Nose", value: nft.nose },
+                { trait_type: "Mouth", value: nft.mouth },
+                { trait_type: "Suit", value: nft.suit },
+                { trait_type: "Tie", value: nft.tie.name },
+                { trait_type: "Neckwear", value: nft.neckwear }
+            ];
+
+            if (nft.faceAccessory !== "None") attributes.push({ trait_type: "Face Accessory", value: nft.faceAccessory });
+            if (nft.brokerBadge !== "None") attributes.push({ trait_type: "Broker Badge", value: nft.brokerBadge });
+            if (nft.pocketSquare !== "None") attributes.push({ trait_type: "Pocket Square", value: nft.pocketSquare });
+
+            return {
+                name: `StonkBroker #${nft.tokenId}`,
+                description: `StonkBroker #${nft.tokenId} is a 100% unique on-chain generative character from the V6 collection.`,
+                image: `${nft.tokenId}.png`,
+                attributes: attributes
+            };
+        }
+
+        // RENDER GALLERY
+        function renderGallery() {
+            const grid = document.getElementById("nftGrid");
+            grid.innerHTML = "";
+
+            const start = (currentPage - 1) * ITEMS_PER_PAGE;
+            const end = Math.min(start + ITEMS_PER_PAGE, filteredNFTs.length);
+
+            const slice = filteredNFTs.slice(start, end);
+
+            slice.forEach(nft => {
+                const svgString = renderSVG(nft);
+                const card = document.createElement("div");
+                card.className = "nft-card";
+                card.onclick = () => openModal(nft);
+                card.innerHTML = `
+                    <div class="img-container">${svgString}</div>
+                    <div class="card-body">
+                        <div class="card-title">
+                            <span>StonkBroker</span>
+                            <span class="card-id">#${nft.tokenId}</span>
+                        </div>
+                        <div class="traits-summary">${nft.skin.name} • ${nft.suit}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            document.getElementById("pageInfo").innerText = `Page ${currentPage} of ${Math.ceil(filteredNFTs.length / ITEMS_PER_PAGE) || 1}`;
+            document.getElementById("prevBtn").disabled = currentPage === 1;
+            document.getElementById("nextBtn").disabled = currentPage >= Math.ceil(filteredNFTs.length / ITEMS_PER_PAGE);
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            renderGallery();
+            window.scrollTo({ top: 300, behavior: 'smooth' });
+        }
+
+        function handleSearch() {
+            const query = document.getElementById("searchInput").value.trim();
+            if (!query) {
+                filteredNFTs = [...generatedNFTs];
+            } else {
+                const id = parseInt(query);
+                filteredNFTs = generatedNFTs.filter(nft => nft.tokenId === id);
+            }
+            currentPage = 1;
+            renderGallery();
+        }
+
+        function regenerateCollection() {
+            generateUniqueCollection();
+            currentPage = 1;
+            renderGallery();
+        }
+
+        // MODAL FUNCTIONS
+        function openModal(nft) {
+            const modal = document.getElementById("modalOverlay");
+            document.getElementById("modalImgContainer").innerHTML = renderSVG(nft);
+            document.getElementById("modalTitle").innerText = `StonkBroker #${nft.tokenId}`;
+
+            const metadata = buildMetadata(nft);
+            const attrGrid = document.getElementById("modalAttrGrid");
+            attrGrid.innerHTML = "";
+
+            metadata.attributes.forEach(attr => {
+                const attrBox = document.createElement("div");
+                attrBox.className = "attr-box";
+                attrBox.innerHTML = `
+                    <div class="attr-type">${attr.trait_type}</div>
+                    <div class="attr-val">${attr.value}</div>
+                `;
+                attrGrid.appendChild(attrBox);
+            });
+
+            document.getElementById("modalJsonBox").innerText = JSON.stringify(metadata, null, 2);
+            modal.style.display = "flex";
+        }
+
+        function closeModal(e) {
+            if (e.target.id === "modalOverlay") {
+                document.getElementById("modalOverlay").style.display = "none";
+            }
+        }
+
+        function closeModalDirect() {
+            document.getElementById("modalOverlay").style.display = "none";
+        }
+
+        // ZIP DOWNLOADERS
+        async function downloadImagesZip() {
+            const zip = new JSZip();
+            const progressWrapper = document.getElementById("progressWrapper");
+            const progressBarFill = document.getElementById("progressBarFill");
+            const progressStatus = document.getElementById("progressStatus");
+            const progressPercent = document.getElementById("progressPercent");
+
+            progressWrapper.style.display = "block";
+
+            for (let i = 0; i < generatedNFTs.length; i++) {
+                const nft = generatedNFTs[i];
+                const svgData = renderSVG(nft);
+                zip.file(`${nft.tokenId}.svg`, svgData);
+
+                if (i % 200 === 0 || i === generatedNFTs.length - 1) {
+                    const pct = Math.round(((i + 1) / generatedNFTs.length) * 100);
+                    progressBarFill.style.width = pct + "%";
+                    progressStatus.innerText = `Archiving SVG Images (${i + 1}/${generatedNFTs.length})...`;
+                    progressPercent.innerText = pct + "%";
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+
+            progressStatus.innerText = "Compressing ZIP file...";
+            const blob = await zip.generateAsync({ type: "blob" }, (metadata) => {
+                const pct = Math.round(metadata.percent);
+                progressBarFill.style.width = pct + "%";
+                progressPercent.innerText = pct + "%";
+            });
+
+            saveAs(blob, "StonkBroker_6666_NFT_Images.zip");
+            setTimeout(() => { progressWrapper.style.display = "none"; }, 1500);
+        }
+
+        async function downloadMetadataZip() {
+            const zip = new JSZip();
+            const progressWrapper = document.getElementById("progressWrapper");
+            const progressBarFill = document.getElementById("progressBarFill");
+            const progressStatus = document.getElementById("progressStatus");
+            const progressPercent = document.getElementById("progressPercent");
+
+            progressWrapper.style.display = "block";
+
+            for (let i = 0; i < generatedNFTs.length; i++) {
+                const nft = generatedNFTs[i];
+                const meta = buildMetadata(nft);
+                zip.file(`${nft.tokenId}.json`, JSON.stringify(meta, null, 2));
+
+                if (i % 500 === 0 || i === generatedNFTs.length - 1) {
+                    const pct = Math.round(((i + 1) / generatedNFTs.length) * 100);
+                    progressBarFill.style.width = pct + "%";
+                    progressStatus.innerText = `Archiving JSON Metadata (${i + 1}/${generatedNFTs.length})...`;
+                    progressPercent.innerText = pct + "%";
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+
+            progressStatus.innerText = "Compressing ZIP file...";
+            const blob = await zip.generateAsync({ type: "blob" }, (metadata) => {
+                const pct = Math.round(metadata.percent);
+                progressBarFill.style.width = pct + "%";
+                progressPercent.innerText = pct + "%";
+            });
+
+            saveAs(blob, "StonkBroker_6666_NFT_Metadata.zip");
+            setTimeout(() => { progressWrapper.style.display = "none"; }, 1500);
+        }
+
+        // INITIALIZE ON LOAD
+        window.onload = () => {
+            generateUniqueCollection();
+            renderGallery();
+        };
+    </script>
+</body>
+</html>
