@@ -28,6 +28,19 @@
   .warn { color:#aa0000; font-family:'Press Start 2P',monospace; font-size:8px; margin-bottom:6px; }
   .stat { display:flex; gap:16px; flex-wrap:wrap; margin-top:8px; }
   .stat span { font-family:'Press Start 2P',monospace; font-size:9px; background:#d4d0c8; border:2px outset #808080; padding:6px 10px; }
+
+  .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; max-height:640px; overflow-y:auto; padding:4px; }
+  .nft-card { background:#d4d0c8; border:2px solid; border-top-color:#fff; border-left-color:#fff; border-right-color:#808080; border-bottom-color:#808080; cursor:pointer; padding:6px; text-align:center; }
+  .nft-card:hover { outline:2px solid #000080; }
+  .nft-card img { width:100%; aspect-ratio:1; image-rendering:pixelated; background:#fff; border:1px inset #808080; display:block; }
+  .nft-card .cap { font-family:'Press Start 2P',monospace; font-size:7px; margin-top:4px; color:#000080; }
+  .gallery-empty { font-family:'Press Start 2P',monospace; font-size:9px; text-align:center; padding:30px; color:#808080; }
+
+  .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.8); display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px; }
+  .modal-box { background:#c0c0c0; border:3px solid; border-top-color:#fff; border-left-color:#fff; border-right-color:#808080; border-bottom-color:#808080; width:100%; max-width:460px; max-height:88vh; overflow:auto; }
+  .modal-img { width:100%; aspect-ratio:1; image-rendering:pixelated; background:#fff; border:2px inset #808080; }
+  .attr-row { display:flex; justify-content:space-between; background:#fff; border:1px solid #808080; padding:5px 8px; margin-bottom:4px; font-family:'VT323',monospace; font-size:15px; }
+  .attr-row b { color:#000080; font-family:'VT323',monospace; }
 </style>
 </head>
 <body>
@@ -73,9 +86,9 @@
       <div class="row">
         <button id="fetch-btn" onclick="startFetch()">⛓ FETCH FROM CHAIN</button>
         <button id="stop-btn" onclick="stopFetch()" disabled>🛑 STOP</button>
-        <button onclick="downloadFullZip()" id="dl-full" disabled>📦 FULL JSON+IMAGE (ZIP)</button>
-        <button onclick="downloadCleanZip()" id="dl-clean" disabled>🧹 CLEANED JSON (no image/wallet) (ZIP)</button>
-        <button onclick="downloadCSV()" id="dl-csv" disabled>📄 CSV (attributes only)</button>
+        <button onclick="downloadImagesZip()" id="dl-images" disabled>🖼️ NFT IMAGES (ZIP)</button>
+        <button onclick="downloadMetadataZip()" id="dl-meta" disabled>📄 METADATA (ZIP)</button>
+        <button onclick="downloadCSV()" id="dl-csv" disabled>📊 CSV (attributes only)</button>
       </div>
       <div class="bar"><div class="fill" id="fill"></div></div>
       <div class="stat">
@@ -83,6 +96,15 @@
         <span id="stat-ok">OK: 0</span>
         <span id="stat-fail">FAILED: 0</span>
         <span id="stat-total">TOTAL: 0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="win">
+    <div class="titlebar">🖼️ LIVE GALLERY — যেগুলো লোড হচ্ছে সেগুলো এখানে দেখা যাবে, কার্ডে ক্লিক করলে মেটাডাটা</div>
+    <div class="content">
+      <div id="gallery" class="gallery">
+        <div class="gallery-empty">[ এখনো কোনো NFT লোড হয়নি — FETCH FROM CHAIN চাপুন ]</div>
       </div>
     </div>
   </div>
@@ -96,12 +118,95 @@
 
 </div>
 
+<div id="modal-root"></div>
+
 <script>
 const TOKEN_URI_SELECTOR = "0xc87b56dd"; // keccak256("tokenURI(uint256)")[0:4]
 
 let results = new Map(); // tokenId -> {name, description, attributes, image}
 let failedIds = [];
 let stopFlag = false;
+let galleryCleared = false;
+
+function escapeHtml(str) {
+  if (str === undefined || str === null) return '';
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m] || m));
+}
+
+function addCardToGallery(tokenId, meta) {
+  const gallery = document.getElementById('gallery');
+  if (!galleryCleared) {
+    gallery.innerHTML = '';
+    galleryCleared = true;
+  }
+  const card = document.createElement('div');
+  card.className = 'nft-card';
+  card.id = `card-${tokenId}`;
+  card.innerHTML = `
+    <img src="${meta.image}" loading="lazy" alt="${escapeHtml(meta.name)}">
+    <div class="cap">#${tokenId}</div>
+  `;
+  card.onclick = () => openMetadataModal(tokenId);
+  gallery.appendChild(card);
+}
+
+function openMetadataModal(tokenId) {
+  const meta = results.get(tokenId);
+  if (!meta) return;
+  const root = document.getElementById('modal-root');
+  const attrsHtml = (meta.attributes || []).map(a =>
+    `<div class="attr-row"><span>${escapeHtml(a.trait_type)}</span><b>${escapeHtml(a.value)}</b></div>`
+  ).join('');
+  root.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) this.remove()">
+      <div class="modal-box">
+        <div class="titlebar"><span>✏️ #${tokenId} — ${escapeHtml(meta.name)}</span><button onclick="document.getElementById('modal-root').innerHTML=''">✕</button></div>
+        <div class="content">
+          <img class="modal-img" src="${meta.image}" alt="${escapeHtml(meta.name)}">
+          <p style="font-family:'VT323',monospace; font-size:15px; margin:10px 0; color:#333;">${escapeHtml(meta.description || '')}</p>
+          <div class="info" style="margin-top:10px;">ATTRIBUTES</div>
+          ${attrsHtml || '<div class="attr-row"><span>No attributes</span></div>'}
+          <div class="row" style="margin-top:12px;">
+            <button onclick="downloadSingleImage(${tokenId})" style="flex:1;">🖼️ PNG</button>
+            <button onclick="downloadSingleMetadata(${tokenId})" style="flex:1;">📄 JSON</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function svgDataUrlToPngBlob(dataUrl, size = 512) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0, size, size);
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob failed')), 'image/png');
+    };
+    img.onerror = () => reject(new Error('SVG image load failed'));
+    img.src = dataUrl;
+  });
+}
+
+async function downloadSingleImage(tokenId) {
+  const meta = results.get(tokenId);
+  if (!meta) return;
+  const blob = await svgDataUrlToPngBlob(meta.image);
+  saveAs(blob, `${tokenId}.png`);
+}
+
+function downloadSingleMetadata(tokenId) {
+  const meta = results.get(tokenId);
+  if (!meta) return;
+  const { image, ...rest } = meta;
+  const blob = new Blob([JSON.stringify(rest, null, 2)], { type: 'application/json' });
+  saveAs(blob, `${tokenId}.json`);
+}
 
 function log(msg) {
   const el = document.getElementById('log');
@@ -163,6 +268,7 @@ async function worker(rpcUrl, contractAddress, queue, stats) {
       try {
         const meta = await fetchTokenURI(rpcUrl, contractAddress, tokenId);
         results.set(tokenId, meta);
+        addCardToGallery(tokenId, meta);
         stats.ok++;
         done = true;
       } catch (err) {
@@ -210,10 +316,12 @@ async function startFetch() {
   results.clear();
   failedIds = [];
   stopFlag = false;
+  galleryCleared = false;
+  document.getElementById('gallery').innerHTML = '<div class="gallery-empty">[ লোড হচ্ছে... ]</div>';
   document.getElementById('fetch-btn').disabled = true;
   document.getElementById('stop-btn').disabled = false;
-  document.getElementById('dl-full').disabled = true;
-  document.getElementById('dl-clean').disabled = true;
+  document.getElementById('dl-images').disabled = true;
+  document.getElementById('dl-meta').disabled = true;
   document.getElementById('dl-csv').disabled = true;
   document.getElementById('log').textContent = '';
 
@@ -241,8 +349,8 @@ async function startFetch() {
   document.getElementById('fetch-btn').disabled = false;
   document.getElementById('stop-btn').disabled = true;
   if (results.size) {
-    document.getElementById('dl-full').disabled = false;
-    document.getElementById('dl-clean').disabled = false;
+    document.getElementById('dl-images').disabled = false;
+    document.getElementById('dl-meta').disabled = false;
     document.getElementById('dl-csv').disabled = false;
   }
 }
@@ -252,27 +360,40 @@ function stopFetch() {
   log('🛑 Stopping after current in-flight requests...');
 }
 
-async function downloadFullZip() {
+async function downloadImagesZip() {
+  const btn = document.getElementById('dl-images');
+  const originalText = btn.textContent;
+  btn.disabled = true;
   const zip = new JSZip();
-  for (const [tokenId, meta] of results) {
-    zip.file(`${tokenId}.json`, JSON.stringify(meta, null, 2));
+  const sortedIds = [...results.keys()].sort((a, b) => a - b);
+  let i = 0;
+  for (const tokenId of sortedIds) {
+    const meta = results.get(tokenId);
+    try {
+      const pngBlob = await svgDataUrlToPngBlob(meta.image);
+      zip.file(`${tokenId}.png`, pngBlob);
+    } catch (e) {
+      log(`⚠️ #${tokenId} image conversion failed: ${e.message}`);
+    }
+    i++;
+    if (i % 25 === 0) btn.textContent = `📦 ${i}/${sortedIds.length}`;
   }
   const blob = await zip.generateAsync({ type: 'blob' });
-  saveAs(blob, `stonkbrokers_onchain_full_${Date.now()}.zip`);
+  saveAs(blob, `stonkbrokers_images_${Date.now()}.zip`);
+  btn.textContent = originalText;
+  btn.disabled = false;
 }
 
-async function downloadCleanZip() {
+async function downloadMetadataZip() {
   const zip = new JSZip();
-  for (const [tokenId, meta] of results) {
-    const cleaned = {
-      name: meta.name,
-      description: meta.description,
-      attributes: (meta.attributes || []).filter(a => a.trait_type !== 'Wallet Address')
-    };
-    zip.file(`${tokenId}.json`, JSON.stringify(cleaned, null, 2));
+  const sortedIds = [...results.keys()].sort((a, b) => a - b);
+  for (const tokenId of sortedIds) {
+    const meta = results.get(tokenId);
+    const { image, ...rest } = meta; // metadata zip excludes the embedded image data
+    zip.file(`${tokenId}.json`, JSON.stringify(rest, null, 2));
   }
   const blob = await zip.generateAsync({ type: 'blob' });
-  saveAs(blob, `stonkbrokers_onchain_cleaned_${Date.now()}.zip`);
+  saveAs(blob, `stonkbrokers_metadata_${Date.now()}.zip`);
 }
 
 function downloadCSV() {
