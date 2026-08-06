@@ -121,9 +121,6 @@
       <div class="row">
         <button id="gen-btn" onclick="startGenerate()">🎲 GENERATE 6666 NEW NFTs</button>
         <button id="stop-btn" onclick="stopGenerate()" disabled>🛑 STOP</button>
-        <button onclick="downloadImagesZip()" id="dl-images" disabled>🖼️ NFT IMAGES (ZIP)</button>
-        <button onclick="downloadMetadataZip()" id="dl-meta" disabled>📄 METADATA (ZIP)</button>
-        <button onclick="downloadCSV()" id="dl-csv" disabled>📊 CSV (attributes only)</button>
       </div>
       <div class="bar"><div class="fill" id="fill"></div></div>
       <div class="stat">
@@ -131,6 +128,27 @@
         <span id="stat-ok">OK: 0</span>
         <span id="stat-reroll">RE-ROLLED (দুই-বার মিলে যাওয়ায়): 0</span>
         <span id="stat-total">TOTAL: 0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="win">
+    <div class="titlebar"><span>📦 DOWNLOAD</span></div>
+    <div class="content">
+      <div class="row">
+        <div class="col">
+          <button onclick="downloadImagesZip()" id="dl-images" disabled style="width:100%;">🖼️ NFT IMAGES (ZIP — 1.svg, 2.svg...)</button>
+          <div class="bar"><div class="fill" id="images-fill"></div></div>
+          <div class="info" id="images-progress-text" style="margin-top:4px;">0 / 0</div>
+        </div>
+        <div class="col">
+          <button onclick="downloadMetadataZip()" id="dl-meta" disabled style="width:100%;">📄 METADATA (ZIP — 1.json, 2.json...)</button>
+          <div class="bar"><div class="fill" id="meta-fill"></div></div>
+          <div class="info" id="meta-progress-text" style="margin-top:4px;">0 / 0</div>
+        </div>
+      </div>
+      <div class="row">
+        <button onclick="downloadCSV()" id="dl-csv" disabled style="width:100%;">📊 CSV (attributes only)</button>
       </div>
     </div>
   </div>
@@ -802,38 +820,84 @@ function stopGenerate() {
   stopFlag = true;
 }
 
+function svgDataUrlToText(dataUrl) {
+  const b64 = dataUrl.split(',')[1];
+  return base64ToUtf8ForSvg(b64);
+}
+function base64ToUtf8ForSvg(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
 async function downloadImagesZip() {
   const btn = document.getElementById('dl-images');
-  const originalText = btn.textContent;
+  const fillEl = document.getElementById('images-fill');
+  const textEl = document.getElementById('images-progress-text');
   btn.disabled = true;
+  fillEl.style.width = '0%';
   const zip = new JSZip();
   const sortedIds = [...results.keys()].sort((a,b) => a-b);
+  const total = sortedIds.length;
   let i = 0;
   for (const tokenId of sortedIds) {
     const meta = results.get(tokenId);
     try {
-      const pngBlob = await svgDataUrlToPngBlob(meta.image);
-      zip.file(`${tokenId}.png`, pngBlob);
-    } catch (e) { log(`⚠️ #${tokenId} image conversion failed: ${e.message}`); }
+      zip.file(`${tokenId}.svg`, svgDataUrlToText(meta.image));
+    } catch (e) { log(`⚠️ #${tokenId} SVG extract failed: ${e.message}`); }
     i++;
-    if (i % 100 === 0) btn.textContent = `📦 ${i}/${sortedIds.length}`;
+    if (i % 25 === 0 || i === total) {
+      const pct = Math.round((i / total) * 50); // 0-50% = collecting files
+      fillEl.style.width = pct + '%';
+      textEl.textContent = `Adding files: ${i} / ${total}`;
+      await new Promise(r => setTimeout(r, 0));
+    }
   }
-  const blob = await zip.generateAsync({ type: 'blob' });
+  textEl.textContent = `Compressing ZIP...`;
+  const blob = await zip.generateAsync({ type: 'blob' }, (metadata) => {
+    const pct = 50 + Math.round(metadata.percent / 2); // 50-100% = compressing
+    fillEl.style.width = pct + '%';
+    textEl.textContent = `Compressing ZIP: ${Math.round(metadata.percent)}%`;
+  });
+  fillEl.style.width = '100%';
+  textEl.textContent = `✅ Done: ${total} / ${total} (.svg)`;
   saveAs(blob, `stonkbrokers_new6666_images_${Date.now()}.zip`);
-  btn.textContent = originalText;
   btn.disabled = false;
 }
 
 async function downloadMetadataZip() {
+  const btn = document.getElementById('dl-meta');
+  const fillEl = document.getElementById('meta-fill');
+  const textEl = document.getElementById('meta-progress-text');
+  btn.disabled = true;
+  fillEl.style.width = '0%';
   const zip = new JSZip();
   const sortedIds = [...results.keys()].sort((a,b) => a-b);
+  const total = sortedIds.length;
+  let i = 0;
   for (const tokenId of sortedIds) {
     const meta = results.get(tokenId);
     const { image, ...rest } = meta;
     zip.file(`${tokenId}.json`, JSON.stringify(rest, null, 2));
+    i++;
+    if (i % 100 === 0 || i === total) {
+      const pct = Math.round((i / total) * 50);
+      fillEl.style.width = pct + '%';
+      textEl.textContent = `Adding files: ${i} / ${total}`;
+      await new Promise(r => setTimeout(r, 0));
+    }
   }
-  const blob = await zip.generateAsync({ type: 'blob' });
+  textEl.textContent = `Compressing ZIP...`;
+  const blob = await zip.generateAsync({ type: 'blob' }, (metadata) => {
+    const pct = 50 + Math.round(metadata.percent / 2);
+    fillEl.style.width = pct + '%';
+    textEl.textContent = `Compressing ZIP: ${Math.round(metadata.percent)}%`;
+  });
+  fillEl.style.width = '100%';
+  textEl.textContent = `✅ Done: ${total} / ${total} (.json)`;
   saveAs(blob, `stonkbrokers_new6666_metadata_${Date.now()}.zip`);
+  btn.disabled = false;
 }
 
 function downloadCSV() {
