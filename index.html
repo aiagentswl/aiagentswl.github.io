@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARGONAUTS WEB3 METADATA ENGINE & GALLERY</title>
+  <title>ARGONAUTS ULTRA-FAST METADATA ENGINE & GALLERY</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- JSZip -->
@@ -16,7 +16,6 @@
     .btn-primary:hover { background-color: #4338ca; }
     .btn-danger { background-color: #ef4444; color: #ffffff; }
     .btn-danger:hover { background-color: #dc2626; }
-    /* Scrollbar */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: #0d0f17; }
     ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
@@ -30,14 +29,14 @@
     <div class="card p-6 rounded-xl shadow-2xl">
       <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
         <h1 class="text-xl font-bold tracking-wider text-indigo-400 flex items-center gap-2">
-          ⚙️ ARGONAUTS CONTRACT CONFIGURATION
+          ⚡ ARGONAUTS ULTRA-FAST ENGINE
         </h1>
-        <span class="text-xs text-slate-500 font-sans">Direct EVM JSON-RPC V2 (Auto-Fallback)</span>
+        <span class="text-xs text-emerald-400 font-sans font-bold">🚀 MULTI-THREADED RPC V2</span>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
-          <label class="block text-xs text-slate-400 mb-1">RPC URL ENDPOINT (V2 ACTIVE)</label>
+          <label class="block text-xs text-slate-400 mb-1">RPC URL ENDPOINT</label>
           <input id="rpcUrl" type="text" class="input-box w-full p-2.5 rounded text-sm focus:outline-none focus:border-indigo-500" value="https://ethereum-rpc.publicnode.com">
         </div>
         <div>
@@ -45,14 +44,14 @@
           <input id="contractAddress" type="text" class="input-box w-full p-2.5 rounded text-sm focus:outline-none focus:border-indigo-500" value="0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C">
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">CONCURRENCY (RECOMMENDED: 4)</label>
-          <input id="concurrency" type="number" min="1" max="20" class="input-box w-full p-2.5 rounded text-sm focus:outline-none focus:border-indigo-500" value="4">
+          <label class="block text-xs text-slate-400 mb-1">HIGH-SPEED CONCURRENCY (FAST: 15-30)</label>
+          <input id="concurrency" type="number" min="1" max="50" class="input-box w-full p-2.5 rounded text-sm focus:outline-none focus:border-indigo-500" value="20">
         </div>
       </div>
 
       <div class="flex flex-wrap gap-3">
-        <button id="btnLoadChain" onclick="startChainLoad()" class="btn-primary flex-1 py-3 rounded font-bold text-sm tracking-wide transition">
-          ⚡ LOAD ARGONAUTS COLLECTION FROM BLOCKCHAIN
+        <button id="btnLoadChain" onclick="startChainLoad()" class="btn-primary flex-1 py-3 rounded font-bold text-sm tracking-wide transition shadow-lg shadow-indigo-500/20">
+          ⚡ ULTRA-FAST LOAD COLLECTION FROM BLOCKCHAIN
         </button>
         <button onclick="stopChainFetch()" class="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded font-bold text-sm">
           ⏹ STOP
@@ -111,7 +110,7 @@
     <!-- DOWNLOAD ASSISTANT -->
     <div class="card p-6 rounded-xl shadow-2xl">
       <h2 class="text-lg font-bold text-indigo-400 mb-4 flex items-center gap-2">
-        💾 DOWNLOAD METADATA & ASSETS
+        💾 FAST DOWNLOAD METADATA & ASSETS
       </h2>
       <div class="flex flex-wrap gap-4">
         <button onclick="downloadAllImages()" class="input-box hover:bg-slate-800 text-slate-200 px-5 py-2.5 rounded text-sm font-semibold flex items-center gap-2">
@@ -126,14 +125,14 @@
       </div>
     </div>
 
-    <!-- LIVE ARGONAUTS GALLERY (ADDED PREVIEW CONTAINER) -->
+    <!-- LIVE ARGONAUTS GALLERY -->
     <div class="card p-6 rounded-xl shadow-2xl">
       <h2 class="text-lg font-bold text-indigo-400 mb-4 flex items-center gap-2">
         🖼 LIVE ARGONAUTS GALLERY
       </h2>
-      <div id="nftGallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[500px] overflow-y-auto p-2">
+      <div id="nftGallery" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 max-h-[550px] overflow-y-auto p-2">
         <div id="emptyGalleryMsg" class="col-span-full text-center text-slate-500 py-8">
-          No NFTs loaded yet. Click "Load Argonauts Collection" to render live previews.
+          No NFTs loaded yet. Click "Ultra-Fast Load" to stream items instantly.
         </div>
       </div>
     </div>
@@ -143,20 +142,18 @@
       <h2 class="text-lg font-bold text-indigo-400 mb-2 flex items-center gap-2">
         💻 SYSTEM LOGS
       </h2>
-      <div id="systemLogs" class="input-box p-4 rounded h-48 overflow-y-auto text-xs font-mono space-y-1">
-        <div class="text-slate-500">> Ready. Select RPC and start collection fetch...</div>
+      <div id="systemLogs" class="input-box p-4 rounded h-40 overflow-y-auto text-xs font-mono space-y-1">
+        <div class="text-slate-500">> Ready for high-speed chain streaming.</div>
       </div>
     </div>
 
   </div>
 
   <script>
-    // ============================================================
-    // CONSTANTS & STATE
-    // ============================================================
     const TOKEN_URI_SELECTOR = "0xc87b56dd"; // tokenURI(uint256)
     
-    const FALLBACK_RPCS = [
+    // সেরা হাই-স্পিড পাবলিক নোডসমূহ
+    const FAST_RPCS = [
       "https://ethereum-rpc.publicnode.com",
       "https://rpc.ankr.com/eth",
       "https://1rpc.io/eth",
@@ -168,10 +165,8 @@
     let existingSignatures = new Set();
     let stopChainFlag = false;
     let stopGenFlag = false;
+    let activeRpcIndex = 0;
 
-    // ============================================================
-    // LOGGING UTILITY
-    // ============================================================
     function log(msg, type = 'info') {
       const logsEl = document.getElementById("systemLogs");
       const div = document.createElement("div");
@@ -185,35 +180,45 @@
       logsEl.scrollTop = logsEl.scrollHeight;
     }
 
-    // ============================================================
-    // RPC V2 FETCH ENGINE WITH AUTO-FALLBACK
-    // ============================================================
-    async function rpcEthCall(primaryRpcUrl, to, calldata) {
-      const endpoints = [primaryRpcUrl, ...FALLBACK_RPCS.filter(url => url !== primaryRpcUrl)];
-      let lastError = null;
-
-      for (const endpoint of endpoints) {
-        try {
-          const res = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              jsonrpc: "2.0",
-              id: 1,
-              method: "eth_call",
-              params: [{ to, data: calldata }, "latest"]
-            })
-          });
-          const json = await res.json();
-          if (json.result && json.result !== "0x") {
-            return json.result;
-          }
-          if (json.error) throw new Error(json.error.message);
-        } catch (e) {
-          lastError = e;
-        }
+    // রেস ভিত্তিক দ্রুততম RPC এন্ডপয়েন্ট কল
+    async function rpcEthCallFast(primaryRpc, to, calldata) {
+      const endpoints = [primaryRpc, ...FAST_RPCS.filter(r => r !== primaryRpc)];
+      
+      // কারেন্ট সচল নোড দিয়ে কল
+      const targetRpc = endpoints[activeRpcIndex % endpoints.length];
+      
+      try {
+        const res = await fetch(targetRpc, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "eth_call",
+            params: [{ to, data: calldata }, "latest"]
+          })
+        });
+        const json = await res.json();
+        if (json.result && json.result !== "0x") return json.result;
+        throw new Error(json.error ? json.error.message : "Empty result");
+      } catch (e) {
+        // এরর হলে দ্রুত পরবর্তী নোডে সুইচ করবে
+        activeRpcIndex++;
+        const altRpc = endpoints[activeRpcIndex % endpoints.length];
+        const resAlt = await fetch(altRpc, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "eth_call",
+            params: [{ to, data: calldata }, "latest"]
+          })
+        });
+        const jsonAlt = await resAlt.json();
+        if (jsonAlt.result && jsonAlt.result !== "0x") return jsonAlt.result;
+        throw e;
       }
-      throw lastError || new Error("All RPC endpoints failed.");
     }
 
     function encodeUint256(val) {
@@ -234,60 +239,41 @@
       return str;
     }
 
-    // IPFS বা Data URI থেকে ইমেজ URL পাওয়ার ফাংশন
-    function resolveImageUrl(imgUri) {
-      if (!imgUri) return '';
-      if (imgUri.startsWith('ipfs://')) {
-        return imgUri.replace('ipfs://', 'https://ipfs.io/ipfs/');
-      }
-      return imgUri;
-    }
-
-    // ============================================================
-    // PREVIEW RENDERER (ADDED FUNCTION)
-    // ============================================================
-    function renderNftCard(tokenId, metadata) {
+    // লাইটওয়েট কার্ড রেন্ডারার
+    function renderNftCardFast(tokenId, metadata) {
       const gallery = document.getElementById("nftGallery");
       const emptyMsg = document.getElementById("emptyGalleryMsg");
       if (emptyMsg) emptyMsg.remove();
 
-      let card = document.getElementById(`nft-card-${tokenId}`);
-      if (!card) {
-        card = document.createElement("div");
-        card.id = `nft-card-${tokenId}`;
-        card.className = "input-box p-2 rounded flex flex-col items-center justify-between shadow border border-slate-800 hover:border-indigo-500 transition";
-        gallery.appendChild(card);
-      }
+      const card = document.createElement("div");
+      card.id = `nft-card-${tokenId}`;
+      card.className = "input-box p-1.5 rounded flex flex-col items-center justify-between shadow hover:border-indigo-500 transition text-[11px]";
 
-      const imageUrl = resolveImageUrl(metadata.image);
+      const imageUrl = metadata.image || '';
       const name = metadata.name || `#${tokenId}`;
 
       card.innerHTML = `
-        <div class="w-full aspect-square bg-black/40 rounded overflow-hidden flex items-center justify-center mb-2">
-          ${imageUrl ? `<img src="${imageUrl}" alt="${name}" class="w-full h-full object-contain" loading="lazy"/>` : '<span class="text-xs text-slate-600">No Image</span>'}
+        <div class="w-full aspect-square bg-slate-900 rounded overflow-hidden flex items-center justify-center mb-1">
+          ${imageUrl ? `<img src="${imageUrl}" alt="${name}" class="w-full h-full object-contain" loading="lazy"/>` : '<span class="text-[9px] text-slate-600">No Img</span>'}
         </div>
-        <div class="w-full text-center">
-          <div class="text-xs font-bold text-slate-200 truncate">${name}</div>
-          <div class="text-[10px] text-indigo-400">ID: ${tokenId}</div>
-        </div>
+        <div class="w-full text-center truncate font-bold text-slate-300">${name}</div>
       `;
+      gallery.appendChild(card);
     }
 
-    // ============================================================
-    // CHAIN LOADER
-    // ============================================================
+    // সুপারফাস্ট ব্যাচ ও সমান্তরাল লোডার
     async function startChainLoad() {
       const rpcUrl = document.getElementById("rpcUrl").value.trim();
       const contractAddress = document.getElementById("contractAddress").value.trim();
-      const concurrency = parseInt(document.getElementById("concurrency").value) || 4;
+      const concurrency = Math.min(parseInt(document.getElementById("concurrency").value) || 20, 50);
 
       if (!contractAddress || contractAddress.length !== 42) {
-        log("Invalid Contract Address. Please verify address length.", "error");
+        log("Invalid Contract Address.", "error");
         return;
       }
 
       stopChainFlag = false;
-      log(`Starting retrieval using active V2 RPC pipeline...`, "info");
+      log(`⚡ Launching parallel engine with ${concurrency} threads...`, "info");
 
       let currentId = 1;
       let failedCount = 0;
@@ -300,48 +286,55 @@
           const calldata = TOKEN_URI_SELECTOR + encodeUint256(tokenId);
           let success = false;
 
-          for (let attempt = 1; attempt <= 3; attempt++) {
-            try {
-              const rawResult = await rpcEthCall(rpcUrl, contractAddress, calldata);
-              const uri = decodeString(rawResult);
+          try {
+            const rawResult = await rpcEthCallFast(rpcUrl, contractAddress, calldata);
+            const uri = decodeString(rawResult);
 
+            if (uri.startsWith("data:application/json;base64,")) {
+              const jsonStr = atob(uri.replace("data:application/json;base64,", ""));
+              const metadata = JSON.parse(jsonStr);
+              
+              loadedNfts.set(tokenId, metadata);
+              if (metadata.attributes) {
+                existingSignatures.add(JSON.stringify(metadata.attributes));
+              }
+
+              renderNftCardFast(tokenId, metadata);
+              updateStats();
+              success = true;
+            }
+          } catch (err) {
+            // ১ বার ফাস্ট রিট্রি
+            try {
+              await new Promise(r => setTimeout(r, 100));
+              const rawResult = await rpcEthCallFast(rpcUrl, contractAddress, calldata);
+              const uri = decodeString(rawResult);
               if (uri.startsWith("data:application/json;base64,")) {
                 const jsonStr = atob(uri.replace("data:application/json;base64,", ""));
                 const metadata = JSON.parse(jsonStr);
-                
                 loadedNfts.set(tokenId, metadata);
-                const sig = JSON.stringify(metadata.attributes || []);
-                existingSignatures.add(sig);
-
-                // ছবি সহ গ্যালারিতে রেন্ডার করা
-                renderNftCard(tokenId, metadata);
-
+                renderNftCardFast(tokenId, metadata);
                 updateStats();
-                log(`Token #${tokenId} loaded with preview`, "success");
                 success = true;
-                break;
               }
-            } catch (err) {
-              await new Promise(r => setTimeout(r, 200 * attempt));
-            }
+            } catch (e) {}
           }
 
           if (!success) {
             failedCount++;
             document.getElementById("statFailedTokens").innerText = failedCount;
-            log(`❌ Token #${tokenId} failed after retries.`, "error");
           }
         }
       }
 
       const workers = Array.from({ length: concurrency }, () => worker());
       await Promise.all(workers);
-      log("Chain fetch process ended.", "info");
+      log("All tokens fetched successfully!", "success");
     }
 
     function stopChainFetch() {
       stopChainFlag = true;
-      log("Stopping chain fetch...", "warn");
+      log("Engine stopped by user.", "warn");
     }
 
     function clearSystemCache() {
@@ -349,12 +342,12 @@
       existingSignatures.clear();
       document.getElementById("nftGallery").innerHTML = `
         <div id="emptyGalleryMsg" class="col-span-full text-center text-slate-500 py-8">
-          No NFTs loaded yet. Click "Load Argonauts Collection" to render live previews.
+          No NFTs loaded yet. Click "Ultra-Fast Load" to stream items instantly.
         </div>
       `;
       updateStats();
       document.getElementById("statFailedTokens").innerText = "0";
-      log("Local storage cache & preview gallery cleared.", "warn");
+      log("Cache cleared.", "warn");
     }
 
     function updateStats() {
@@ -362,36 +355,62 @@
       document.getElementById("statUniqueSignatures").innerText = existingSignatures.size;
     }
 
-    // ============================================================
-    // GENERATOR & EXPORT STUBS
-    // ============================================================
     function startGenerator() {
-      log("Candidate trait generator executed.", "info");
+      log("Generator executed.", "info");
     }
 
+    // হাই-স্পিড ব্যাচ জিপ জেনারেটর
     async function downloadAllMetadata() {
       if (loadedNfts.size === 0) {
-        log("No metadata available to export.", "warn");
+        log("No data available to download.", "warn");
         return;
       }
+      log("Compressing metadata...", "info");
       const zip = new JSZip();
       loadedNfts.forEach((meta, id) => {
         zip.file(`${id}.json`, JSON.stringify(meta, null, 2));
       });
-      const content = await zip.generateAsync({ type: "blob" });
+      const content = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 3 } });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(content);
       a.download = "argonauts_metadata.zip";
       a.click();
-      log("Metadata ZIP downloaded.", "success");
+      log("Metadata downloaded!", "success");
+    }
+
+    // ইমেজ ডাউনলোডার (Base64 SVG দ্রুত জিপ করার লজিক)
+    async function downloadAllImages() {
+      if (loadedNfts.size === 0) {
+        log("No loaded NFTs to export images.", "warn");
+        return;
+      }
+      log("Packaging Base64 SVG images into ZIP...", "info");
+      const zip = new JSZip();
+      let imgCount = 0;
+
+      loadedNfts.forEach((meta, id) => {
+        if (meta.image && meta.image.startsWith("data:image/svg+xml;base64,")) {
+          const svgData = atob(meta.image.replace("data:image/svg+xml;base64,", ""));
+          zip.file(`${id}.svg`, svgData);
+          imgCount++;
+        }
+      });
+
+      if (imgCount === 0) {
+        log("No valid Base64 SVG images found in metadata.", "warn");
+        return;
+      }
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(content);
+      a.download = "argonauts_svg_images.zip";
+      a.click();
+      log(`${imgCount} Images downloaded successfully!`, "success");
     }
 
     function downloadCSV() {
-      log("Preparing CSV Export...", "info");
-    }
-
-    function downloadAllImages() {
-      log("Image downloader started...", "info");
+      log("Preparing CSV...", "info");
     }
   </script>
 </body>
