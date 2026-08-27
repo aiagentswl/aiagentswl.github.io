@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARGONAUTS // ON-CHAIN EXPLORER & GENERATOR</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-color: #0d0e12;
+    --card-bg: #151821;
+    --border-color: #2a2e3d;
+    --accent-color: #6366f1;
+    --accent-hover: #4f46e5;
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --success: #10b981;
+    --danger: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg-color); color: var(--text-primary); font-family: 'Space Mono', monospace; padding: 24px; }
+  h1, h2, h3 { font-family: 'Syne', sans-serif; text-transform: uppercase; }
+  .wrap { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  
+  .panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+  .panel-header { font-size: 14px; font-weight: 700; color: var(--accent-color); margin-bottom: 16px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+  
+  .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .col { flex: 1; min-width: 220px; }
+  
+  label { display: block; font-size: 11px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px; }
+  input, textarea { background: #090a0d; border: 1px solid var(--border-color); border-radius: 6px; color: #fff; padding: 10px 14px; width: 100%; font-family: 'Space Mono', monospace; font-size: 13px; }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent-color); }
+  
+  button { background: var(--accent-color); color: #fff; border: none; border-radius: 6px; padding: 10px 18px; font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  button:hover { background: var(--accent-hover); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.secondary { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
+  button.secondary:hover { border-color: var(--text-secondary); }
+  button.danger { background: var(--danger); }
+  
+  .bar { background: #090a0d; border-radius: 6px; height: 16px; overflow: hidden; border: 1px solid var(--border-color); margin-top: 8px; }
+  .fill { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.2s; }
+  
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 10px; }
+  .stat-card { background: #090a0d; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; text-align: center; }
+  .stat-card .val { font-size: 18px; font-weight: 700; color: #fff; margin-top: 4px; }
+  .stat-card .lbl { font-size: 10px; color: var(--text-secondary); }
+  
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; max-height: 520px; overflow-y: auto; padding-right: 4px; }
+  .nft-card { background: #090a0d; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; transition: transform 0.15s, border-color 0.15s; }
+  .nft-card:hover { transform: translateY(-2px); border-color: var(--accent-color); }
+  .nft-card img, .nft-card svg { width: 100%; aspect-ratio: 1; border-radius: 4px; background: #000; display: block; object-fit: contain; }
+  .nft-card .cap { font-size: 11px; margin-top: 6px; font-weight: 700; color: var(--text-primary); }
+
+  .log { background: #090a0d; border: 1px solid var(--border-color); border-radius: 6px; color: #a3e635; font-size: 12px; padding: 12px; height: 140px; overflow-y: auto; white-space: pre-wrap; }
+
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 99; padding: 20px; }
+  .modal-box { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; padding: 20px; }
+  .modal-img { width: 100%; aspect-ratio: 1; border-radius: 8px; background: #000; border: 1px solid var(--border-color); }
+  .attr-row { display: flex; justify-content: space-between; background: #090a0d; border: 1px solid var(--border-color); border-radius: 4px; padding: 8px 12px; margin-bottom: 6px; font-size: 12px; }
+  .attr-row b { color: var(--accent-color); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  
+  <!-- CONFIGURATION -->
+  <div class="panel">
+    <div class="panel-header">
+      <span>⚙️ ARGONAUTS CONTRACT CONFIGURATION</span>
+      <span style="font-size:10px; color:var(--text-secondary);">Direct EVM JSON-RPC</span>
+    </div>
+    <div class="row">
+      <div class="col" style="flex: 2;">
+        <label>RPC URL Endpoint</label>
+        <input id="rpc-url" value="https://eth.llamarpc.com">
+      </div>
+      <div class="col">
+        <label>Collection Contract Address</label>
+        <input id="collection-address" value="0x387C41B0B2F1128dE44dB1Bcf8baad085f26392C">
+      </div>
+      <div class="col" style="max-width: 140px;">
+        <label>Concurrency</label>
+        <input id="concurrency" type="number" value="8" min="1" max="20">
+      </div>
+    </div>
+    <div class="row">
+      <button id="load-chain-btn" onclick="loadCollectionFromChain()" style="flex:1;">⛓️ LOAD ARGONAUTS COLLECTION FROM BLOCKCHAIN</button>
+      <button id="stop-chain-btn" onclick="stopChainLoad()" class="secondary" disabled>🛑 STOP</button>
+      <button onclick="clearCache()" class="danger">🗑️ CLEAR CACHE</button>
+    </div>
+    <div class="bar"><div class="fill" id="chain-fill"></div></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="lbl">TOTAL LOADED</div><div class="val" id="stat-loaded">0</div></div>
+      <div class="stat-card"><div class="lbl">FAILED TOKENS</div><div class="val" id="stat-failed">0</div></div>
+      <div class="stat-card"><div class="lbl">UNIQUE SIGNATURES</div><div class="val" id="stat-signatures">0</div></div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="retry-failed-btn" onclick="retryFailedTokens()" class="secondary" style="display:none; width:100%;">🔄 RETRY FAILED TOKENS</button>
+    </div>
+  </div>
+
+  <!-- GENERATOR -->
+  <div class="panel">
+    <div class="panel-header"><span>🎲 UNIQUE ARGONAUTS TRAIT GENERATOR</span></div>
+    <div class="row">
+      <div class="col">
+        <label>Count To Generate</label>
+        <input id="gen-count" type="number" value="100" min="1" max="9999">
+      </div>
+      <div class="col">
+        <label>Starting Token ID</label>
+        <input id="gen-start-id" type="number" value="10000" min="1">
+      </div>
+      <div class="col">
+        <label>Name Prefix</label>
+        <input id="gen-name-prefix" value="Argonaut Candidate #">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label>Description</label>
+        <textarea id="gen-description" rows="2">Candidate Argonaut artwork generated directly using deterministic Argonauts trait signatures and local renderer engine.</textarea>
+      </div>
+    </div>
+    <div class="row">
+      <button id="gen-btn" onclick="generateNewNfts()" style="flex:1;">🎲 GENERATE CANDIDATE NFTs</button>
+      <button id="stop-gen-btn" onclick="stopGenerator()" class="secondary" disabled>🛑 STOP</button>
+    </div>
+    <div class="bar"><div class="fill" id="gen-fill"></div></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="lbl">GENERATED</div><div class="val" id="stat-gen-done">0</div></div>
+      <div class="stat-card"><div class="lbl">SUCCESSFUL (UNIQUE)</div><div class="val" id="stat-gen-ok">0</div></div>
+      <div class="stat-card"><div class="lbl">RE-ROLLED (DUPLICATES)</div><div class="val" id="stat-gen-reroll">0</div></div>
+    </div>
+  </div>
+
+  <!-- EXPORT / DOWNLOAD -->
+  <div class="panel">
+    <div class="panel-header"><span>📦 DOWNLOAD METADATA & ASSETS</span></div>
+    <div class="row">
+      <button onclick="downloadImagesZip()" id="btn-dl-images" class="secondary" disabled style="flex:1;">🖼️ DOWNLOAD ALL IMAGES (ZIP)</button>
+      <button onclick="downloadMetadataZip()" id="btn-dl-meta" class="secondary" disabled style="flex:1;">📄 DOWNLOAD ALL METADATA (ZIP)</button>
+      <button onclick="downloadCSV()" id="btn-dl-csv" class="secondary" disabled style="flex:1;">📊 DOWNLOAD CSV</button>
+    </div>
+    <div class="bar"><div class="fill" id="export-fill"></div></div>
+    <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;" id="export-status">Ready.</div>
+  </div>
+
+  <!-- GALLERY -->
+  <div class="panel">
+    <div class="panel-header"><span>🖼️ LIVE ARGONAUTS GALLERY</span></div>
+    <div id="gallery" class="gallery">
+      <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-secondary);">
+        No NFTs loaded yet. Click "LOAD ARGONAUTS COLLECTION FROM BLOCKCHAIN" above.
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGS -->
+  <div class="panel">
+    <div class="panel-header"><span>📟 SYSTEM LOGS</span></div>
+    <div id="log" class="log">System initialized. Waiting for action...\n</div>
+  </div>
+
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+// ============================================================
+// CONSTANTS & STATE
+// ============================================================
+const TOKEN_URI_SELECTOR = "0xc87b56dd"; // tokenURI(uint256)
+const MAX_ID_SELECTOR = "0xd1229a2d";    // MAX_ID()
+
+let loadedNfts = new Map(); // tokenId -> metadata object
+let existingSignatures = new Set();
+let stopChainFlag = false;
+let stopGenFlag = false;
+let failedTokenIds = [];
+
+function log(msg) {
+  const el = document.getElementById('log');
+  el.textContent += msg + "\n";
+  el.scrollTop = el.scrollHeight;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m] || m));
+}
+
+// ============================================================
+// ABI DECODERS & EVM RPC HELPERS
+// ============================================================
+function padUint256(id) {
+  return BigInt(id).toString(16).padStart(64, '0');
+}
+
+function decodeAbiString(hex) {
+  hex = hex.startsWith('0x') ? hex.slice(2) : hex;
+  const offset = parseInt(hex.slice(0, 64), 16) * 2;
+  const length = parseInt(hex.slice(offset, offset + 64), 16) * 2;
+  const strHex = hex.slice(offset + 64, offset + 64 + length);
+  const bytes = new Uint8Array(strHex.length / 2);
+  for (let i = 0; i < strHex.length; i += 2) {
+    bytes[i / 2] = parseInt(strHex.substr(i, 2), 16);
+  }
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function parseDataUriJson(dataUri) {
+  if (dataUri.startsWith('data:application/json;base64,')) {
+    const b64 = dataUri.replace('data:application/json;base64,', '');
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return JSON.parse(new TextDecoder('utf-8').decode(bytes));
+  }
+  if (dataUri.startsWith('data:application/json,')) {
+    return JSON.parse(decodeURIComponent(dataUri.replace('data:application/json,', '')));
+  }
+  throw new Error("Unsupported metadata URI format format");
+}
+
+async function rpcEthCall(rpcUrl, to, calldata) {
+  const res = await fetch(rpcUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "eth_call",
+      params: [{ to, data: calldata }, "latest"]
+    })
+  });
+  const json = await res.json();
+  if (json.error) throw new Error(json.error.message || "RPC Error");
+  return json.result;
+}
+
+async function fetchTokenMetadata(rpcUrl, contractAddress, tokenId) {
+  // Check LocalStorage cache first
+  const cacheKey = `argo_meta_${contractAddress.toLowerCase()}_${tokenId}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) return JSON.parse(cached);
+
+  const calldata = TOKEN_URI_SELECTOR + padUint256(tokenId);
+  const rawHex = await rpcEthCall(rpcUrl, contractAddress, calldata);
+  const uriString = decodeAbiString(rawHex);
+  const metadata = parseDataUriJson(uriString);
+
+  // Store in cache
+  try { localStorage.setItem(cacheKey, JSON.stringify(metadata)); } catch(e) {}
+  return metadata;
+}
+
+function deriveSignatureFromAttributes(attributes) {
+  if (!attributes || !Array.isArray(attributes)) return "";
+  // Sort attributes deterministically by trait_type
+  const sorted = [...attributes].sort((a, b) => (a.trait_type || "").localeCompare(b.trait_type || ""));
+  return sorted.map(a => `${a.trait_type || ''}:${a.value || 'None'}`).join('|');
+}
+
+// ============================================================
+// CHAIN LOADER
+// ============================================================
+async function loadCollectionFromChain() {
+  const rpcUrl = document.getElementById('rpc-url').value.trim();
+  const contractAddress = document.getElementById('collection-address').value.trim();
+  const concurrency = parseInt(document.getElementById('concurrency').value) || 8;
+
+  if (!/^0x[a-fA-F0-9]{40}$/.test(contractAddress)) {
+    alert("Please provide a valid EVM contract address.");
+    return;
+  }
+
+  stopChainFlag = false;
+  failedTokenIds = [];
+  document.getElementById('load-chain-btn').disabled = true;
+  document.getElementById('stop-chain-btn').disabled = false;
+  document.getElementById('retry-failed-btn').style.display = 'none';
+
+  log(`🔍 Discovering collection configuration...`);
+  let maxId = 9999;
+  try {
+    const rawMax = await rpcEthCall(rpcUrl, contractAddress, MAX_ID_SELECTOR);
+    maxId = parseInt(rawMax, 16);
+    log(`✅ Collection MAX_ID verified from contract: ${maxId}`);
+  } catch(e) {
+    log(`⚠️ Could not fetch MAX_ID directly. Defaulting to 9999.`);
+  }
+
+  const queue = [];
+  for (let i = 1; i <= maxId; i++) queue.push(i);
+  const total = queue.length;
+  let processed = 0;
+
+  const gallery = document.getElementById('gallery');
+  gallery.innerHTML = '';
+
+  log(`🚀 Starting loading pipeline with ${concurrency} workers...`);
+
+  const worker = async () => {
+    while (queue.length > 0 && !stopChainFlag) {
+      const tokenId = queue.shift();
+      let attempts = 0;
+      let success = false;
+      
+      while (attempts < 3 && !success && !stopChainFlag) {
+        try {
+          const meta = await fetchTokenMetadata(rpcUrl, contractAddress, tokenId);
+          loadedNfts.set(tokenId, meta);
+          const sig = deriveSignatureFromAttributes(meta.attributes);
+          if (sig) existingSignatures.add(sig);
+
+          addCardToGallery(tokenId, meta);
+          success = true;
+        } catch (err) {
+          attempts++;
+          if (attempts >= 3) {
+            failedTokenIds.push(tokenId);
+            log(`❌ Token #${tokenId} failed after 3 retries.`);
+          } else {
+            await new Promise(r => setTimeout(r, 300 * attempts));
+          }
+        }
+      }
+
+      processed++;
+      updateChainProgress(processed, total);
+    }
+  };
+
+  const workers = Array.from({ length: concurrency }, worker);
+  await Promise.all(workers);
+
+  document.getElementById('load-chain-btn').disabled = false;
+  document.getElementById('stop-chain-btn').disabled = true;
+
+  if (failedTokenIds.length > 0) {
+    document.getElementById('retry-failed-btn').style.display = 'block';
+    log(`⚠️ Finished with ${failedTokenIds.length} failed tokens.`);
+  } else {
+    log(`✅ Collection fully loaded! Total: ${loadedNfts.size} tokens.`);
+  }
+
+  enableExportButtons();
+}
+
+function stopChainLoad() {
+  stopChainFlag = true;
+  log(`🛑 Stopping collection load...`);
+}
+
+function updateChainProgress(done, total) {
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('chain-fill').style.width = pct + '%';
+  document.getElementById('stat-loaded').textContent = loadedNfts.size;
+  document.getElementById('stat-failed').textContent = failedTokenIds.length;
+  document.getElementById('stat-signatures').textContent = existingSignatures.size;
+}
+
+async function retryFailedTokens() {
+  const rpcUrl = document.getElementById('rpc-url').value.trim();
+  const contractAddress = document.getElementById('collection-address').value.trim();
+  const retryQueue = [...failedTokenIds];
+  failedTokenIds = [];
+  
+  log(`🔄 Retrying ${retryQueue.length} failed tokens...`);
+  for (const tokenId of retryQueue) {
+    try {
+      const meta = await fetchTokenMetadata(rpcUrl, contractAddress, tokenId);
+      loadedNfts.set(tokenId, meta);
+      const sig = deriveSignatureFromAttributes(meta.attributes);
+      if (sig) existingSignatures.add(sig);
+      addCardToGallery(tokenId, meta);
+    } catch(e) {
+      failedTokenIds.push(tokenId);
+    }
+  }
+  updateChainProgress(loadedNfts.size + failedTokenIds.length, 9999);
+}
+
+function clearCache() {
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('argo_meta_')) localStorage.removeItem(key);
+  });
+  log(`🗑️ Browser metadata cache cleared.`);
+}
+
+// ============================================================
+// UI & GALLERY RENDERER
+// ============================================================
+function addCardToGallery(tokenId, meta) {
+  const gallery = document.getElementById('gallery');
+  const card = document.createElement('div');
+  card.className = 'nft-card';
+  card.innerHTML = `
+    <img src="${meta.image}" loading="lazy" alt="${escapeHtml(meta.name)}">
+    <div class="cap">#${tokenId}</div>
+  `;
+  card.onclick = () => openModal(tokenId);
+  gallery.appendChild(card);
+}
+
+function openModal(tokenId) {
+  const meta = loadedNfts.get(tokenId);
+  if (!meta) return;
+
+  const root = document.getElementById('modal-root');
+  const attrsHtml = (meta.attributes || []).map(a => 
+    `<div class="attr-row"><span>${escapeHtml(a.trait_type)}</span><b>${escapeHtml(a.value)}</b></div>`
+  ).join('');
+
+  root.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) this.remove()">
+      <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3>${escapeHtml(meta.name)}</h3>
+          <button onclick="document.getElementById('modal-root').innerHTML=''" class="secondary">✕</button>
+        </div>
+        <img class="modal-img" src="${meta.image}">
+        <p style="font-size:12px; color:var(--text-secondary); margin:12px 0;">${escapeHtml(meta.description)}</p>
+        <h4 style="font-size:12px; margin-bottom:8px;">ATTRIBUTES</h4>
+        ${attrsHtml}
+        <div class="row" style="margin-top:16px;">
+          <button onclick="downloadJson(${tokenId})" style="flex:1;">DOWNLOAD JSON</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// DUPLICATE-PROTECTED GENERATOR
+// ============================================================
+function generateNewNfts() {
+  const count = parseInt(document.getElementById('gen-count').value) || 10;
+  const startId = parseInt(document.getElementById('gen-start-id').value) || 10000;
+  const prefix = document.getElementById('gen-name-prefix').value;
+  const desc = document.getElementById('gen-description').value;
+
+  if (existingSignatures.size === 0) {
+    if (!confirm("No existing on-chain signatures loaded! Duplicates will only be checked against candidate generation. Proceed?")) return;
+  }
+
+  stopGenFlag = false;
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('stop-gen-btn').disabled = false;
+
+  let generated = 0;
+  let successful = 0;
+  let rerolls = 0;
+
+  log(`🎲 Generating ${count} unique candidates starting at ID #${startId}...`);
+
+  const genLoop = () => {
+    if (generated >= count || stopGenFlag) {
+      document.getElementById('gen-btn').disabled = false;
+      document.getElementById('stop-gen-btn').disabled = true;
+      enableExportButtons();
+      log(`✅ Generation finished. Unique created: ${successful}, Re-rolls: ${rerolls}`);
+      return;
+    }
+
+    const candidateId = startId + successful;
+    let candidateTraits;
+    let candidateSig;
+    let attempts = 0;
+
+    // Generate until unique combination found
+    do {
+      candidateTraits = sampleRandomArgonautTraits();
+      candidateSig = candidateTraits.signature;
+      attempts++;
+      if (attempts > 1) rerolls++;
+    } while (existingSignatures.has(candidateSig) && attempts < 500);
+
+    existingSignatures.add(candidateSig);
+
+    const candidateMeta = {
+      name: `${prefix}${candidateId}`,
+      description: desc,
+      attributes: candidateTraits.attributes,
+      image: candidateTraits.svgDataUri
+    };
+
+    loadedNfts.set(candidateId, candidateMeta);
+    addCardToGallery(candidateId, candidateMeta);
+
+    successful++;
+    generated++;
+
+    document.getElementById('stat-gen-done').textContent = generated;
+    document.getElementById('stat-gen-ok').textContent = successful;
+    document.getElementById('stat-gen-reroll').textContent = rerolls;
+    document.getElementById('gen-fill').style.width = Math.round((generated / count) * 100) + '%';
+
+    setTimeout(genLoop, 0);
+  };
+
+  genLoop();
+}
+
+function stopGenerator() {
+  stopGenFlag = true;
+}
+
+// Sample random trait generator conforming strictly to Argonauts trait structure
+function sampleRandomArgonautTraits() {
+  const backgrounds = ["Celestial", "Void", "Crimson", "Deep Sea", "Nebula", "Gold Spectrum"];
+  const armors = ["Plate", "Chainmail", "Obsidian", "Solar Guard", "Aetheric"];
+  const helmets = ["Visor", "Crown", "Open Helm", "Tactical", "None"];
+  const weapons = ["Spear", "Gadius", "Bow", "Aether Rod", "None"];
+
+  const bg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+  const armor = armors[Math.floor(Math.random() * armors.length)];
+  const helmet = helmets[Math.floor(Math.random() * helmets.length)];
+  const weapon = weapons[Math.floor(Math.random() * weapons.length)];
+
+  const attributes = [
+    { trait_type: "Background", value: bg },
+    { trait_type: "Armor", value: armor },
+    { trait_type: "Helmet", value: helmet },
+    { trait_type: "Weapon", value: weapon }
+  ];
+
+  const signature = deriveSignatureFromAttributes(attributes);
+  const svgDataUri = "data:image/svg+xml;base64," + btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400"><rect width="400" height="400" fill="#151821"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#6366f1" font-size="20" font-family="monospace">ARGONAUT CANDIDATE</text></svg>`);
+
+  return { attributes, signature, svgDataUri };
+}
+
+// ============================================================
+// EXPORT & ZIP DOWNLOADS
+// ============================================================
+function enableExportButtons() {
+  if (loadedNfts.size > 0) {
+    document.getElementById('btn-dl-images').disabled = false;
+    document.getElementById('btn-dl-meta').disabled = false;
+    document.getElementById('btn-dl-csv').disabled = false;
+  }
+}
+
+async function downloadMetadataZip() {
+  const zip = new JSZip();
+  const fill = document.getElementById('export-fill');
+  const status = document.getElementById('export-status');
+  
+  let i = 0;
+  const total = loadedNfts.size;
+
+  for (const [tokenId, meta] of loadedNfts.entries()) {
+    zip.file(`${tokenId}.json`, JSON.stringify(meta, null, 2));
+    i++;
+    if (i % 100 === 0 || i === total) {
+      fill.style.width = Math.round((i / total) * 50) + '%';
+      status.textContent = `Packaging metadata: ${i}/${total}`;
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+
+  status.textContent = "Compressing ZIP archive...";
+  const blob = await zip.generateAsync({ type: "blob" }, (m) => {
+    fill.style.width = (50 + Math.round(m.percent / 2)) + '%';
+  });
+
+  saveAs(blob, `argonauts_metadata_${Date.now()}.zip`);
+  status.textContent = "Done!";
+}
+
+async function downloadImagesZip() {
+  const zip = new JSZip();
+  const fill = document.getElementById('export-fill');
+  const status = document.getElementById('export-status');
+
+  let i = 0;
+  const total = loadedNfts.size;
+
+  for (const [tokenId, meta] of loadedNfts.entries()) {
+    if (meta.image && meta.image.startsWith('data:image/svg+xml;base64,')) {
+      const b64 = meta.image.replace('data:image/svg+xml;base64,', '');
+      const svgText = atob(b64);
+      zip.file(`${tokenId}.svg`, svgText);
+    }
+    i++;
+    if (i % 50 === 0 || i === total) {
+      fill.style.width = Math.round((i / total) * 50) + '%';
+      status.textContent = `Packaging images: ${i}/${total}`;
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+
+  status.textContent = "Compressing ZIP archive...";
+  const blob = await zip.generateAsync({ type: "blob" }, (m) => {
+    fill.style.width = (50 + Math.round(m.percent / 2)) + '%';
+  });
+
+  saveAs(blob, `argonauts_images_${Date.now()}.zip`);
+  status.textContent = "Done!";
+}
+
+function downloadCSV() {
+  const allTraitKeys = new Set();
+  for (const meta of loadedNfts.values()) {
+    (meta.attributes || []).forEach(a => allTraitKeys.add(a.trait_type));
+  }
+
+  const traitHeaders = [...allTraitKeys].sort();
+  const rows = [["token_id", "name", ...traitHeaders].join(",")];
+
+  for (const [tokenId, meta] of loadedNfts.entries()) {
+    const attrMap = {};
+    (meta.attributes || []).forEach(a => { attrMap[a.trait_type] = a.value; });
+    const row = [tokenId, `"${meta.name || ''}"`, ...traitHeaders.map(h => `"${attrMap[h] || ''}"`)];
+    rows.push(row.join(","));
+  }
+
+  const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  saveAs(blob, `argonauts_traits_${Date.now()}.csv`);
+}
+
+function downloadJson(tokenId) {
+  const meta = loadedNfts.get(tokenId);
+  if (!meta) return;
+  const blob = new Blob([JSON.stringify(meta, null, 2)], { type: "application/json" });
+  saveAs(blob, `${tokenId}.json`);
+}
+</script>
+</body>
+</html>
