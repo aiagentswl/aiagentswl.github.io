@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARGONAUTS WEB3 METADATA ENGINE</title>
+  <title>ARGONAUTS WEB3 METADATA ENGINE & GALLERY</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- JSZip -->
@@ -126,6 +126,18 @@
       </div>
     </div>
 
+    <!-- LIVE ARGONAUTS GALLERY (ADDED PREVIEW CONTAINER) -->
+    <div class="card p-6 rounded-xl shadow-2xl">
+      <h2 class="text-lg font-bold text-indigo-400 mb-4 flex items-center gap-2">
+        🖼 LIVE ARGONAUTS GALLERY
+      </h2>
+      <div id="nftGallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[500px] overflow-y-auto p-2">
+        <div id="emptyGalleryMsg" class="col-span-full text-center text-slate-500 py-8">
+          No NFTs loaded yet. Click "Load Argonauts Collection" to render live previews.
+        </div>
+      </div>
+    </div>
+
     <!-- SYSTEM LOGS -->
     <div class="card p-6 rounded-xl shadow-2xl">
       <h2 class="text-lg font-bold text-indigo-400 mb-2 flex items-center gap-2">
@@ -144,7 +156,6 @@
     // ============================================================
     const TOKEN_URI_SELECTOR = "0xc87b56dd"; // tokenURI(uint256)
     
-    // হাই-স্পিড ও রিলায়েবল V2 পাবলিক RPC এন্ডপয়েন্টের তালিকা
     const FALLBACK_RPCS = [
       "https://ethereum-rpc.publicnode.com",
       "https://rpc.ankr.com/eth",
@@ -223,6 +234,45 @@
       return str;
     }
 
+    // IPFS বা Data URI থেকে ইমেজ URL পাওয়ার ফাংশন
+    function resolveImageUrl(imgUri) {
+      if (!imgUri) return '';
+      if (imgUri.startsWith('ipfs://')) {
+        return imgUri.replace('ipfs://', 'https://ipfs.io/ipfs/');
+      }
+      return imgUri;
+    }
+
+    // ============================================================
+    // PREVIEW RENDERER (ADDED FUNCTION)
+    // ============================================================
+    function renderNftCard(tokenId, metadata) {
+      const gallery = document.getElementById("nftGallery");
+      const emptyMsg = document.getElementById("emptyGalleryMsg");
+      if (emptyMsg) emptyMsg.remove();
+
+      let card = document.getElementById(`nft-card-${tokenId}`);
+      if (!card) {
+        card = document.createElement("div");
+        card.id = `nft-card-${tokenId}`;
+        card.className = "input-box p-2 rounded flex flex-col items-center justify-between shadow border border-slate-800 hover:border-indigo-500 transition";
+        gallery.appendChild(card);
+      }
+
+      const imageUrl = resolveImageUrl(metadata.image);
+      const name = metadata.name || `#${tokenId}`;
+
+      card.innerHTML = `
+        <div class="w-full aspect-square bg-black/40 rounded overflow-hidden flex items-center justify-center mb-2">
+          ${imageUrl ? `<img src="${imageUrl}" alt="${name}" class="w-full h-full object-contain" loading="lazy"/>` : '<span class="text-xs text-slate-600">No Image</span>'}
+        </div>
+        <div class="w-full text-center">
+          <div class="text-xs font-bold text-slate-200 truncate">${name}</div>
+          <div class="text-[10px] text-indigo-400">ID: ${tokenId}</div>
+        </div>
+      `;
+    }
+
     // ============================================================
     // CHAIN LOADER
     // ============================================================
@@ -232,7 +282,7 @@
       const concurrency = parseInt(document.getElementById("concurrency").value) || 4;
 
       if (!contractAddress || contractAddress.length !== 42) {
-        log("Invalid Contract Address. Please verify the address length.", "error");
+        log("Invalid Contract Address. Please verify address length.", "error");
         return;
       }
 
@@ -245,7 +295,7 @@
       async function worker() {
         while (!stopChainFlag) {
           const tokenId = currentId++;
-          if (tokenId > 10000) break; // adjust limit if needed
+          if (tokenId > 10000) break;
 
           const calldata = TOKEN_URI_SELECTOR + encodeUint256(tokenId);
           let success = false;
@@ -263,8 +313,11 @@
                 const sig = JSON.stringify(metadata.attributes || []);
                 existingSignatures.add(sig);
 
+                // ছবি সহ গ্যালারিতে রেন্ডার করা
+                renderNftCard(tokenId, metadata);
+
                 updateStats();
-                log(`Token #${tokenId} fetched successfully`, "success");
+                log(`Token #${tokenId} loaded with preview`, "success");
                 success = true;
                 break;
               }
@@ -276,7 +329,7 @@
           if (!success) {
             failedCount++;
             document.getElementById("statFailedTokens").innerText = failedCount;
-            log(`❌ Token #${tokenId} failed after 3 retries across RPC endpoints.`, "error");
+            log(`❌ Token #${tokenId} failed after retries.`, "error");
           }
         }
       }
@@ -294,9 +347,14 @@
     function clearSystemCache() {
       loadedNfts.clear();
       existingSignatures.clear();
+      document.getElementById("nftGallery").innerHTML = `
+        <div id="emptyGalleryMsg" class="col-span-full text-center text-slate-500 py-8">
+          No NFTs loaded yet. Click "Load Argonauts Collection" to render live previews.
+        </div>
+      `;
       updateStats();
       document.getElementById("statFailedTokens").innerText = "0";
-      log("Local storage cache cleared.", "warn");
+      log("Local storage cache & preview gallery cleared.", "warn");
     }
 
     function updateStats() {
