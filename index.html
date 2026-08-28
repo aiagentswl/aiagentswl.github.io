@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NFT Galaxy | 24x24 পিক্সেল প্রোফেশনাল</title>
+    <title>ArgoVibes · 24x24 Pixel NFT</title>
     <style>
-        /* ===== রিসেট ===== */
+        /* ===== RESET ===== */
         * {
             margin: 0;
             padding: 0;
@@ -20,7 +20,7 @@
             padding: 1.5rem;
         }
 
-        /* ===== হেডার ===== */
+        /* ===== HEADER ===== */
         .header {
             max-width: 1440px;
             margin: 0 auto 2rem auto;
@@ -84,7 +84,7 @@
             50% { opacity: 0.4; }
         }
 
-        /* ===== লোডিং ===== */
+        /* ===== LOADING ===== */
         .loading-info {
             max-width: 1440px;
             margin: 0 auto 1.5rem auto;
@@ -129,7 +129,7 @@
             border-radius: 12px;
         }
 
-        /* ===== NFT গ্রিড - 24x24 পিক্সেল স্টাইল ===== */
+        /* ===== NFT GRID - 24x24 PIXEL STYLE ===== */
         .gallery {
             max-width: 1440px;
             margin: 0 auto;
@@ -138,7 +138,7 @@
             gap: 1.2rem;
         }
 
-        /* ===== NFT কার্ড ===== */
+        /* ===== NFT CARD ===== */
         .nft-card {
             border-radius: 16px;
             overflow: hidden;
@@ -200,7 +200,7 @@
             object-fit: cover;
             display: block;
             transition: transform 0.5s ease;
-            /* 24x24 পিক্সেল স্টাইল */
+            /* 24x24 pixel style */
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
@@ -287,7 +287,7 @@
             max-width: 80px;
         }
 
-        /* ===== মোডাল ===== */
+        /* ===== MODAL ===== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -431,7 +431,7 @@
             color: #ffd700;
         }
 
-        /* ===== স্ক্রলবার ===== */
+        /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar {
             width: 6px;
             background: #0a0c1a;
@@ -444,7 +444,7 @@
             background: #3a3d5a;
         }
 
-        /* ===== রেসপন্সিভ ===== */
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -501,39 +501,38 @@
 </head>
 <body>
 
-    <!-- ===== হেডার ===== -->
+    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="logo">
-            <h1>✦ NFT Galaxy</h1>
-            <span>24×24 পিক্সেল আর্ট · প্রোফেশনাল কালেকশন</span>
+            <h1>✦ ArgoVibes</h1>
+            <span>24×24 pixel art · original collection</span>
         </div>
         <div class="stats">
-            <span class="live-badge">● লাইভ</span>
-            <span>🖼️ মোট</span>
+            <span class="live-badge">● live</span>
+            <span>🖼️ total</span>
             <span class="count" id="totalCount">0</span>
-            <span>টি</span>
             <span style="opacity:0.3;margin:0 0.2rem;">|</span>
-            <span>✅ লোড হয়েছে</span>
+            <span>✅ loaded</span>
             <span class="count" id="loadedCount">0</span>
         </div>
     </header>
 
-    <!-- ===== লোডিং ===== -->
+    <!-- ===== LOADING ===== -->
     <div class="loading-info">
         <div class="loading-bar">
             <div class="progress" id="progressBar"></div>
         </div>
         <div class="loading-stats">
-            <span id="statusMessage">🔮 লোডিং শুরু...</span>
+            <span id="statusMessage">🔮 loading…</span>
             <span id="percentageDisplay">0%</span>
             <span id="currentToken" class="current-item">#0</span>
         </div>
     </div>
 
-    <!-- ===== NFT গ্যালারি ===== -->
+    <!-- ===== NFT GALLERY ===== -->
     <div class="gallery" id="galleryContainer"></div>
 
-    <!-- ===== মোডাল ===== -->
+    <!-- ===== MODAL ===== -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-content">
             <button class="modal-close" id="modalClose">✕</button>
@@ -541,27 +540,29 @@
                 <img id="modalImage" src="" alt="NFT" />
             </div>
             <div class="modal-info">
-                <h2 id="modalName">NFT নাম</h2>
+                <h2 id="modalName">NFT name</h2>
                 <span class="modal-id" id="modalId">#0000</span>
-                <p class="modal-description" id="modalDescription">বিবরণ</p>
+                <p class="modal-description" id="modalDescription">description</p>
                 <div class="modal-attrs" id="modalAttrs"></div>
             </div>
         </div>
     </div>
 
-    <!-- ===== ফুটার ===== -->
+    <!-- ===== FOOTER ===== -->
     <div class="footer">
         <p>🚀 IPFS · bafybeidwlynyxherp6g3r4tksal7zms4nkmbx2vfar5pvzng3lgwrweesm</p>
-        <p style="margin-top:0.3rem; opacity:0.6;">১–১০,০০০ · অরিজিনাল ব্যাকগ্রাউন্ড কালার সহ</p>
+        <p style="margin-top:0.3rem; opacity:0.6;">1–10,000 · original background color included</p>
     </div>
 
     <script>
         (function() {
             'use strict';
 
-            // ===== কনফিগারেশন =====
+            // ===== CONFIG =====
             const BASE_URI = 'ipfs://bafybeidwlynyxherp6g3r4tksal7zms4nkmbx2vfar5pvzng3lgwrweesm/';
             const TOTAL_SUPPLY = 10000;
+            const PAGE_SIZE = 100; 
+
             const GALLERY = document.getElementById('galleryContainer');
             const PROGRESS_BAR = document.getElementById('progressBar');
             const STATUS_TEXT = document.getElementById('statusMessage');
@@ -582,7 +583,7 @@
             const metadataCache = new Map();
             const PLACEHOLDER_IMG = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1" height="1"%3E%3C/svg%3E';
 
-            // ===== IPFS URI → HTTP =====
+            // ===== IPFS → HTTP =====
             function ipfsToHttp(uri) {
                 if (!uri) return '';
                 if (uri.startsWith('ipfs://')) {
@@ -591,7 +592,7 @@
                 return uri;
             }
 
-            // ===== মেটাডাটা ফেচ =====
+            // ===== FETCH METADATA (no #d4ff00 override) =====
             async function fetchMetadata(tokenId) {
                 if (metadataCache.has(tokenId)) {
                     return metadataCache.get(tokenId);
@@ -611,20 +612,20 @@
                     metadataCache.set(tokenId, data);
                     return data;
                 } catch (error) {
-                    console.warn(`❌ টোকেন #${tokenId} লোড হয়নি:`, error);
+                    console.warn(`❌ token #${tokenId} load failed:`, error);
                     const fallback = {
                         name: `NFT #${tokenId}`,
-                        description: 'মেটাডাটা লোড করতে ব্যর্থ',
+                        description: 'metadata unavailable',
                         image: `${BASE_URI}${tokenId}`,
                         attributes: [],
-                        background_color: '#d4ff00'
+                        background_color: '#12142a'   // fallback, no #d4ff00
                     };
                     metadataCache.set(tokenId, fallback);
                     return fallback;
                 }
             }
 
-            // ===== ইমেজ লোড =====
+            // ===== LOAD IMAGE =====
             function loadImage(imgElement, imageUri) {
                 if (!imageUri) {
                     imgElement.src = PLACEHOLDER_IMG;
@@ -639,19 +640,19 @@
 
                 imgElement.src = httpUrl;
                 imgElement.onerror = function() {
-                    console.warn(`⚠️ ইমেজ লোড করতে ব্যর্থ: ${httpUrl}`);
+                    console.warn(`⚠️ image load failed: ${httpUrl}`);
                     this.src = PLACEHOLDER_IMG;
                 };
             }
 
-            // ===== হেক্স কালার ভালিডেশন =====
+            // ===== HEX VALIDATION =====
             function isValidHexColor(color) {
                 if (!color) return false;
                 const hex = color.replace('#', '');
                 return /^[0-9A-Fa-f]{6}$/.test(hex) || /^[0-9A-Fa-f]{3}$/.test(hex);
             }
 
-            // ===== মোডাল =====
+            // ===== MODAL =====
             function openModal(tokenId, metadata, imageUrl) {
                 const imgHttp = ipfsToHttp(imageUrl || metadata?.image || `${BASE_URI}${tokenId}`);
                 
@@ -663,7 +664,7 @@
                 
                 modalName.textContent = metadata?.name || `NFT #${tokenId}`;
                 modalId.textContent = `#${tokenId}`;
-                modalDescription.textContent = metadata?.description || 'কোন বিবরণ নেই';
+                modalDescription.textContent = metadata?.description || 'no description';
 
                 modalAttrs.innerHTML = '';
                 if (metadata?.attributes && Array.isArray(metadata.attributes) && metadata.attributes.length > 0) {
@@ -677,7 +678,7 @@
                 } else {
                     const noAttr = document.createElement('span');
                     noAttr.className = 'attr-tag';
-                    noAttr.textContent = 'কোন অ্যাট্রিবিউট নেই';
+                    noAttr.textContent = 'no attributes';
                     modalAttrs.appendChild(noAttr);
                 }
 
@@ -698,13 +699,13 @@
                 if (e.key === 'Escape') closeModal();
             });
 
-            // ===== NFT কার্ড তৈরি =====
+            // ===== CREATE NFT CARD (no #d4ff00 replacement) =====
             function createCard(tokenId, metadata) {
                 const card = document.createElement('div');
                 card.className = 'nft-card';
 
-                // অরিজিনাল ব্যাকগ্রাউন্ড কালার সেট করা
-                const bgColor = metadata?.background_color || metadata?.background_color;
+                // Use original background color as-is (no #d4ff00 removal)
+                const bgColor = metadata?.background_color;
                 if (bgColor && isValidHexColor(bgColor)) {
                     card.style.background = `#${bgColor.replace('#', '')}`;
                 } else {
@@ -714,7 +715,6 @@
                 const wrapper = document.createElement('div');
                 wrapper.className = 'nft-image-wrapper';
                 
-                // ব্যাকগ্রাউন্ড কালার ইমেজ র‍্যাপারে
                 if (bgColor && isValidHexColor(bgColor)) {
                     wrapper.style.background = `#${bgColor.replace('#', '')}`;
                 }
@@ -759,7 +759,7 @@
                 const info = document.createElement('div');
                 info.className = 'nft-info';
                 
-                // ইনফো ব্যাকগ্রাউন্ডের জন্য অরিজিনাল কালার
+                // keep original background color only on wrapper, not forced on info
                 if (bgColor && isValidHexColor(bgColor)) {
                     info.style.background = `rgba(10, 12, 26, 0.92)`;
                 }
@@ -803,7 +803,7 @@
                 return card;
             }
 
-            // ===== লাইভ লোডিং =====
+            // ===== PAGE LOADER (100 per page) =====
             async function loadAllNFTs() {
                 const total = TOTAL_SUPPLY;
                 TOTAL_COUNT.textContent = total.toLocaleString();
@@ -811,44 +811,51 @@
                 GALLERY.innerHTML = '';
                 let loaded = 0;
 
-                for (let tokenId = 1; tokenId <= total; tokenId++) {
-                    CURRENT_TOKEN.textContent = `#${tokenId}`;
-                    STATUS_TEXT.textContent = `⏳ লোড হচ্ছে #${tokenId} ...`;
-
-                    const metadata = await fetchMetadata(tokenId);
-                    const card = createCard(tokenId, metadata);
-                    GALLERY.appendChild(card);
-
-                    loaded++;
-                    LOADED_COUNT.textContent = loaded.toLocaleString();
-
-                    const percent = Math.round((loaded / total) * 100);
-                    PROGRESS_BAR.style.width = `${percent}%`;
-                    PERCENTAGE.textContent = `${percent}%`;
-
-                    if (loaded % 30 === 0) {
-                        await new Promise(resolve => setTimeout(resolve, 5));
+                // load page by page (100 items)
+                for (let start = 1; start <= total; start += PAGE_SIZE) {
+                    const end = Math.min(start + PAGE_SIZE - 1, total);
+                    const pageTokens = [];
+                    for (let t = start; t <= end; t++) {
+                        pageTokens.push(t);
                     }
 
-                    if (loaded % 150 === 0 && loaded > 150) {
-                        window.scrollTo({
-                            top: document.body.scrollHeight,
-                            behavior: 'smooth'
-                        });
+                    // fetch metadata in parallel for speed
+                    const metadataPromises = pageTokens.map(id => fetchMetadata(id));
+                    const metadatas = await Promise.all(metadataPromises);
+
+                    // create cards
+                    for (let i = 0; i < pageTokens.length; i++) {
+                        const tokenId = pageTokens[i];
+                        const meta = metadatas[i];
+                        const card = createCard(tokenId, meta);
+                        GALLERY.appendChild(card);
+
+                        loaded++;
+                        LOADED_COUNT.textContent = loaded.toLocaleString();
+                        const percent = Math.round((loaded / total) * 100);
+                        PROGRESS_BAR.style.width = `${percent}%`;
+                        PERCENTAGE.textContent = `${percent}%`;
+                        CURRENT_TOKEN.textContent = `#${tokenId}`;
+                        STATUS_TEXT.textContent = `⏳ loading #${tokenId} …`;
+                    }
+
+                    // tiny delay between pages for UI responsiveness
+                    if (end < total) {
+                        await new Promise(resolve => setTimeout(resolve, 10));
                     }
                 }
 
-                STATUS_TEXT.textContent = '✅ সম্পূর্ণ! সব NFT লোড হয়েছে।';
+                STATUS_TEXT.textContent = '✅ complete! all NFTs loaded.';
                 PROGRESS_BAR.style.width = '100%';
                 PERCENTAGE.textContent = '100%';
                 LOADED_COUNT.textContent = total.toLocaleString();
                 CURRENT_TOKEN.textContent = `#${total}`;
             }
 
-            // ===== শুরু =====
+            // ===== START =====
             loadAllNFTs().catch(err => {
-                console.error('গ্যালারি লোড করতে ব্যর্থ:', err);
-                STATUS_TEXT.textContent = '⚠️ সমস্যা হয়েছে। রিফ্রেশ করে আবার চেষ্টা করুন।';
+                console.error('gallery load failed:', err);
+                STATUS_TEXT.textContent = '⚠️ error. refresh and try again.';
             });
 
         })();
