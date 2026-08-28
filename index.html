@@ -197,7 +197,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             display: block;
             transition: transform 0.5s ease;
             /* 24x24 pixel style */
@@ -376,7 +376,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
@@ -559,9 +559,10 @@
             'use strict';
 
             // ===== CONFIG =====
-            const BASE_URI = 'ipfs://bafybeidwlynyxherp6g3r4tksal7zms4nkmbx2vfar5pvzng3lgwrweesm/';
+            const METADATA_BASE = 'https://gateway.pinata.cloud/ipfs/bafybeidwlynyxherp6g3r4tksal7zms4nkmbx2vfar5pvzng3lgwrweesm/';
+            const IMAGE_GATEWAY = 'https://gateway.pinata.cloud/ipfs/';
             const TOTAL_SUPPLY = 10000;
-            const PAGE_SIZE = 100; 
+            const PAGE_SIZE = 100;
 
             const GALLERY = document.getElementById('galleryContainer');
             const PROGRESS_BAR = document.getElementById('progressBar');
@@ -579,30 +580,34 @@
             const modalDescription = document.getElementById('modalDescription');
             const modalAttrs = document.getElementById('modalAttrs');
 
-            const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
             const metadataCache = new Map();
             const PLACEHOLDER_IMG = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1" height="1"%3E%3C/svg%3E';
 
-            // ===== IPFS → HTTP =====
-            function ipfsToHttp(uri) {
+            // ===== RESOLVE IPFS URI =====
+            function resolveIpfsUri(uri) {
                 if (!uri) return '';
+                // If it's ipfs://, convert to gateway
                 if (uri.startsWith('ipfs://')) {
-                    return uri.replace('ipfs://', IPFS_GATEWAY);
+                    const path = uri.replace('ipfs://', '');
+                    return `${IMAGE_GATEWAY}${path}`;
                 }
-                return uri;
+                // If it's already HTTP, return as is
+                if (uri.startsWith('http://') || uri.startsWith('https://')) {
+                    return uri;
+                }
+                // Otherwise, assume it's a relative path and prepend base
+                return `${IMAGE_GATEWAY}${uri}`;
             }
 
-            // ===== FETCH METADATA (no #d4ff00 override) =====
+            // ===== FETCH METADATA =====
             async function fetchMetadata(tokenId) {
                 if (metadataCache.has(tokenId)) {
                     return metadataCache.get(tokenId);
                 }
 
-                const uri = `${BASE_URI}${tokenId}`;
-                const httpUrl = ipfsToHttp(uri);
-
+                const url = `${METADATA_BASE}${tokenId}`;
                 try {
-                    const response = await fetch(httpUrl, {
+                    const response = await fetch(url, {
                         headers: { 'Accept': 'application/json' }
                     });
                     if (!response.ok) {
@@ -614,11 +619,11 @@
                 } catch (error) {
                     console.warn(`❌ token #${tokenId} load failed:`, error);
                     const fallback = {
-                        name: `NFT #${tokenId}`,
+                        name: `ArgoVibes #${tokenId}`,
                         description: 'metadata unavailable',
-                        image: `${BASE_URI}${tokenId}`,
+                        image: `${METADATA_BASE}${tokenId}`,
                         attributes: [],
-                        background_color: '#12142a'   // fallback, no #d4ff00
+                        background_color: '#12142a'
                     };
                     metadataCache.set(tokenId, fallback);
                     return fallback;
@@ -632,7 +637,9 @@
                     return;
                 }
 
-                const httpUrl = ipfsToHttp(imageUri);
+                const httpUrl = resolveIpfsUri(imageUri);
+                console.log('Loading image:', httpUrl); // Debug log
+
                 imgElement.style.imageRendering = 'pixelated';
                 imgElement.style.imageRendering = '-moz-crisp-edges';
                 imgElement.style.imageRendering = 'crisp-edges';
@@ -654,15 +661,15 @@
 
             // ===== MODAL =====
             function openModal(tokenId, metadata, imageUrl) {
-                const imgHttp = ipfsToHttp(imageUrl || metadata?.image || `${BASE_URI}${tokenId}`);
-                
+                const imgHttp = resolveIpfsUri(imageUrl || metadata?.image || `${METADATA_BASE}${tokenId}`);
+
                 modalImage.src = imgHttp;
                 modalImage.style.imageRendering = 'pixelated';
                 modalImage.style.imageRendering = '-moz-crisp-edges';
                 modalImage.style.imageRendering = 'crisp-edges';
                 modalImage.style.imageRendering = '-webkit-optimize-contrast';
-                
-                modalName.textContent = metadata?.name || `NFT #${tokenId}`;
+
+                modalName.textContent = metadata?.name || `ArgoVibes #${tokenId}`;
                 modalId.textContent = `#${tokenId}`;
                 modalDescription.textContent = metadata?.description || 'no description';
 
@@ -699,12 +706,11 @@
                 if (e.key === 'Escape') closeModal();
             });
 
-            // ===== CREATE NFT CARD (no #d4ff00 replacement) =====
+            // ===== CREATE NFT CARD =====
             function createCard(tokenId, metadata) {
                 const card = document.createElement('div');
                 card.className = 'nft-card';
 
-                // Use original background color as-is (no #d4ff00 removal)
                 const bgColor = metadata?.background_color;
                 if (bgColor && isValidHexColor(bgColor)) {
                     card.style.background = `#${bgColor.replace('#', '')}`;
@@ -714,7 +720,6 @@
 
                 const wrapper = document.createElement('div');
                 wrapper.className = 'nft-image-wrapper';
-                
                 if (bgColor && isValidHexColor(bgColor)) {
                     wrapper.style.background = `#${bgColor.replace('#', '')}`;
                 }
@@ -730,7 +735,7 @@
                 wrapper.appendChild(placeholder);
 
                 const img = document.createElement('img');
-                img.alt = metadata?.name || `NFT #${tokenId}`;
+                img.alt = metadata?.name || `ArgoVibes #${tokenId}`;
                 img.loading = 'lazy';
                 img.style.opacity = '0';
                 wrapper.appendChild(img);
@@ -751,22 +756,17 @@
                     label.textContent = `⚠️ #${tokenId}`;
                 };
 
-                const imageUri = metadata?.image || `${BASE_URI}${tokenId}`;
+                const imageUri = metadata?.image || `${METADATA_BASE}${tokenId}`;
                 loadImage(img, imageUri);
 
                 card.appendChild(wrapper);
 
                 const info = document.createElement('div');
                 info.className = 'nft-info';
-                
-                // keep original background color only on wrapper, not forced on info
-                if (bgColor && isValidHexColor(bgColor)) {
-                    info.style.background = `rgba(10, 12, 26, 0.92)`;
-                }
 
                 const name = document.createElement('div');
                 name.className = 'nft-name';
-                name.textContent = metadata?.name || `NFT #${tokenId}`;
+                name.textContent = metadata?.name || `ArgoVibes #${tokenId}`;
                 info.appendChild(name);
 
                 const idBadge = document.createElement('div');
@@ -803,7 +803,7 @@
                 return card;
             }
 
-            // ===== PAGE LOADER (100 per page) =====
+            // ===== PAGE LOADER =====
             async function loadAllNFTs() {
                 const total = TOTAL_SUPPLY;
                 TOTAL_COUNT.textContent = total.toLocaleString();
@@ -811,7 +811,6 @@
                 GALLERY.innerHTML = '';
                 let loaded = 0;
 
-                // load page by page (100 items)
                 for (let start = 1; start <= total; start += PAGE_SIZE) {
                     const end = Math.min(start + PAGE_SIZE - 1, total);
                     const pageTokens = [];
@@ -819,11 +818,9 @@
                         pageTokens.push(t);
                     }
 
-                    // fetch metadata in parallel for speed
                     const metadataPromises = pageTokens.map(id => fetchMetadata(id));
                     const metadatas = await Promise.all(metadataPromises);
 
-                    // create cards
                     for (let i = 0; i < pageTokens.length; i++) {
                         const tokenId = pageTokens[i];
                         const meta = metadatas[i];
@@ -839,7 +836,6 @@
                         STATUS_TEXT.textContent = `⏳ loading #${tokenId} …`;
                     }
 
-                    // tiny delay between pages for UI responsiveness
                     if (end < total) {
                         await new Promise(resolve => setTimeout(resolve, 10));
                     }
