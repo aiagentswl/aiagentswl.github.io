@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robinhood Chain Top 500 Holders</title>
+    <title>Top 500 NFT Holders</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; text-align: center; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; }
         h2 { color: #111; margin-bottom: 20px; font-size: 20px; }
         .form-group { text-align: left; margin-bottom: 15px; }
         label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #333; }
@@ -19,19 +19,15 @@
         .loading { color: #007bff; }
         .success { color: #28a745; }
         .error { color: #dc3545; }
-        .info { color: #6c757d; }
-        #progressBar { width: 100%; height: 8px; background: #e9ecef; border-radius: 4px; margin-top: 10px; overflow: hidden; display: none; }
-        #progressBar div { height: 100%; background: #007bff; border-radius: 4px; transition: width 0.3s; }
-        .stats { font-size: 12px; color: #6c757d; margin-top: 8px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Robinhood RPC Top 500 Holders</h2>
+    <h2>Top 500 NFT Holders</h2>
     
     <div class="form-group">
-        <label>Alchemy RPC URL:</label>
+        <label>RPC URL:</label>
         <input type="text" id="rpcUrl" value="https://robinhood-mainnet.g.alchemy.com/v2/_v3B3LAcaa_AELEu9S2li" />
     </div>
 
@@ -40,46 +36,34 @@
         <input type="text" id="contractAddress" value="0x68e5a6aaf2503940f0337243063ab8f4da6bedec" />
     </div>
 
-    <div class="form-group">
-        <label>ব্লক রেঞ্জ (Free Tier এ ১০ ব্লক):</label>
-        <input type="number" id="blockRange" value="10" min="1" max="10" />
-        <small style="color: #6c757d;">Alchemy Free Tier এ সর্বোচ্চ ১০ ব্লক</small>
-    </div>
+    <button onclick="getTopHolders()" id="downloadBtn">Top 500 Holders ডাউনলোড করুন</button>
 
-    <button onclick="downloadTop500Holders()" id="downloadBtn">Top 500 CSV ডাউনলোড করুন</button>
-
-    <div id="progressBar"><div id="progressFill" style="width: 0%;"></div></div>
     <div id="status"></div>
 </div>
 
 <script>
-async function downloadTop500Holders() {
+async function getTopHolders() {
     const rpcUrl = document.getElementById('rpcUrl').value.trim();
     const contractAddress = document.getElementById('contractAddress').value.trim();
-    const blockRange = parseInt(document.getElementById('blockRange').value) || 10;
     const statusDiv = document.getElementById('status');
     const downloadBtn = document.getElementById('downloadBtn');
-    const progressFill = document.getElementById('progressFill');
-    const progressBar = document.getElementById('progressBar');
 
     if (!rpcUrl || !contractAddress) {
-        alert("RPC URL এবং Contract Address দুটিই বাধ্যতামূলক!");
+        alert("RPC URL এবং Contract Address দিন!");
         return;
     }
 
     downloadBtn.disabled = true;
-    progressBar.style.display = 'block';
-    progressFill.style.width = '0%';
+    statusDiv.className = "loading";
+    statusDiv.innerText = "⏳ সংযোগ স্থাপন করা হচ্ছে...";
 
     try {
-        statusDiv.className = "loading";
-        statusDiv.innerText = "⏳ RPC এর সাথে কানেক্ট হচ্ছে...";
-
         const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
         const currentBlock = await provider.getBlockNumber();
         
-        statusDiv.innerText = `✅ সংযুক্ত! বর্তমান ব্লক: ${currentBlock.toLocaleString()}`;
+        statusDiv.innerText = `📊 বর্তমান ব্লক: ${currentBlock.toLocaleString()}`;
 
+        // শুধু Transfer ইভেন্টের জন্য ABI
         const abi = [
             "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
             "function balanceOf(address owner) view returns (uint256)"
@@ -87,74 +71,44 @@ async function downloadTop500Holders() {
 
         const contract = new ethers.Contract(contractAddress, abi, provider);
 
-        // সমস্ত ইউনিক অ্যাড্রেস সংগ্রহ করার জন্য
-        const allAddresses = new Set();
-        const zeroAddress = "0x0000000000000000000000000000000000000000";
+        // গত ১০,০০০ ব্লক থেকে Transfer লগ আনা (Alchemy Free Tier এর জন্য)
+        const fromBlock = currentBlock - 10000;
         
-        // Free Tier limitation: 10 blocks per request
-        const maxBlockRange = Math.min(blockRange, 10);
-        
-        // Start from last 10,000 blocks or contract creation (যেটা ছোট)
-        const startBlock = Math.max(0, currentBlock - 10000);
-        let fromBlock = startBlock;
-        let totalLogs = 0;
-        let batchCount = 0;
+        statusDiv.innerText = `🔍 ${fromBlock.toLocaleString()} থেকে ${currentBlock.toLocaleString()} ব্লক স্ক্যান করা হচ্ছে...`;
 
-        statusDiv.innerText = `🔍 ব্লক স্ক্যান করা হচ্ছে (${maxBlockRange} ব্লক/ব্যাচ)...`;
+        const filter = contract.filters.Transfer();
+        const logs = await provider.getLogs({
+            fromBlock: fromBlock,
+            toBlock: currentBlock,
+            address: contractAddress,
+            topics: filter.topics
+        });
 
-        // ব্যাচে ব্যাচে স্ক্যান করা
-        while (fromBlock <= currentBlock) {
-            const toBlock = Math.min(fromBlock + maxBlockRange - 1, currentBlock);
-            
-            try {
-                const logs = await provider.getLogs({
-                    fromBlock: fromBlock,
-                    toBlock: toBlock,
-                    address: contractAddress,
-                    topics: ["0xddf252ad1be2c89b69c2b068f373d8a952ba7f163c4a11628f55a4df523b3ef"]
-                });
+        statusDiv.innerText = `📝 ${logs.length.toLocaleString()} টি Transfer Event পাওয়া গেছে!`;
 
-                if (logs.length > 0) {
-                    totalLogs += logs.length;
-                    
-                    // Transfer ইভেন্ট থেকে অ্যাড্রেস বের করা
-                    for (const log of logs) {
-                        try {
-                            // টপিক থেকে সরাসরি অ্যাড্রেস বের করা
-                            const toAddress = "0x" + log.topics[2].slice(26);
-                            if (toAddress && toAddress !== zeroAddress) {
-                                allAddresses.add(toAddress);
-                            }
-                        } catch (e) {
-                            // Skip invalid logs
-                        }
-                    }
-                }
-
-                batchCount++;
-                const progress = Math.min(100, ((fromBlock - startBlock) / (currentBlock - startBlock)) * 100);
-                progressFill.style.width = progress + '%';
-                
-                statusDiv.innerText = `⏳ স্ক্যানিং: ব্লক ${fromBlock.toLocaleString()} - ${toBlock.toLocaleString()} (${Math.round(progress)}%) | লগ পেয়েছি: ${totalLogs.toLocaleString()}`;
-
-                fromBlock = toBlock + 1;
-
-                // রেট লিমিট এভয়েড করতে সামান্য delay
-                if (batchCount % 5 === 0) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-
-            } catch (error) {
-                console.warn(`Batch ${batchCount} failed:`, error);
-                // এরর হলে এক ব্লক এগিয়ে যাও
-                fromBlock = fromBlock + 1;
-                if (error.message && error.message.includes('rate limit')) {
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                }
-            }
+        if (logs.length === 0) {
+            statusDiv.className = "error";
+            statusDiv.innerText = "❌ কোনো Transfer Events পাওয়া যায়নি!";
+            return;
         }
 
-        const addressList = Array.from(allAddresses);
+        // ইউনিক অ্যাড্রেস সংগ্রহ
+        const uniqueAddresses = new Set();
+        const zeroAddress = "0x0000000000000000000000000000000000000000";
+
+        logs.forEach(log => {
+            try {
+                const parsed = contract.interface.parseLog(log);
+                const to = parsed.args.to;
+                if (to && to !== zeroAddress) {
+                    uniqueAddresses.add(to);
+                }
+            } catch (e) {
+                // Invalid log skip
+            }
+        });
+
+        const addressList = Array.from(uniqueAddresses);
         
         if (addressList.length === 0) {
             statusDiv.className = "error";
@@ -162,102 +116,75 @@ async function downloadTop500Holders() {
             return;
         }
 
-        statusDiv.innerText = `👤 ${addressList.length.toLocaleString()} টি ইউনিক অ্যাড্রেস পেয়েছি! ব্যালেন্স চেক করা হচ্ছে...`;
+        statusDiv.innerText = `👤 ${addressList.length.toLocaleString()} টি ইউনিক অ্যাড্রেস। ব্যালেন্স চেক করা হচ্ছে...`;
 
-        // ব্যালেন্স চেক করা
-        const holderBalances = [];
-        const batchSize = 5;
+        // ব্যালেন্স চেক (সবগুলো)
+        const holders = [];
         let processed = 0;
 
-        for (let i = 0; i < addressList.length; i += batchSize) {
-            const batch = addressList.slice(i, i + batchSize);
-            const promises = batch.map(async (addr) => {
-                try {
-                    const balance = await contract.balanceOf(addr);
-                    const count = balance.toNumber();
-                    if (count > 0) {
-                        return { address: addr, count: count };
-                    }
-                    return null;
-                } catch (err) {
-                    return null;
+        for (const addr of addressList) {
+            try {
+                const balance = await contract.balanceOf(addr);
+                const count = balance.toNumber();
+                if (count > 0) {
+                    holders.push({ address: addr, balance: count });
                 }
-            });
-
-            const results = await Promise.all(promises);
-            results.forEach(res => {
-                if (res) holderBalances.push(res);
-            });
-
-            processed += batch.length;
-            const progress = Math.min(100, 60 + ((processed / addressList.length) * 40));
-            progressFill.style.width = progress + '%';
-            statusDiv.innerText = `⏳ ব্যালেন্স চেক: ${processed.toLocaleString()} / ${addressList.length.toLocaleString()}`;
+            } catch (e) {
+                // Skip
+            }
+            
+            processed++;
+            if (processed % 50 === 0) {
+                statusDiv.innerText = `⏳ ব্যালেন্স চেক: ${processed}/${addressList.length}`;
+            }
         }
 
-        if (holderBalances.length === 0) {
+        if (holders.length === 0) {
             statusDiv.className = "error";
-            statusDiv.innerText = "❌ কোনো একটিভ হোল্ডার খুঁজে পাওয়া যায়নি!";
+            statusDiv.innerText = "❌ কোনো হোল্ডার খুঁজে পাওয়া যায়নি!";
             return;
         }
 
-        // সাজানো (Descending)
-        holderBalances.sort((a, b) => b.count - a.count);
-        const top500 = holderBalances.slice(0, 500);
+        // সাজানো (যার বেশি NFT তার আগে)
+        holders.sort((a, b) => b.balance - a.balance);
+
+        // টপ ৫০০
+        const top500 = holders.slice(0, 500);
 
         // CSV তৈরি
-        let csvContent = "Wallet Address,NFT Balance\n";
-        top500.forEach(item => {
-            csvContent += `"${item.address}",${item.count}\n`;
+        let csv = "Wallet Address,NFT Balance\n";
+        top500.forEach(h => {
+            csv += `"${h.address}",${h.balance}\n`;
         });
 
         // ডাউনলোড
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `robinhood_top_500_holders_${contractAddress.slice(0, 10)}.csv`;
+        a.download = `top_500_holders_${contractAddress.slice(0, 8)}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
         statusDiv.className = "success";
-        statusDiv.innerText = `✅ সফল! টপ ${top500.length} জন হোল্ডারের CSV ডাউনলোড হয়েছে!`;
-        progressFill.style.width = '100%';
+        statusDiv.innerText = `✅ সফল! ${top500.length} জন হোল্ডারের CSV ডাউনলোড হয়েছে!`;
 
     } catch (error) {
-        console.error('Error:', error);
-        
-        let errorMsg = error.message || 'অজানা এরর!';
-        
-        if (errorMsg.includes('block range')) {
-            errorMsg = '⚠️ ব্লক রেঞ্জ খুব বড়! Free Tier এ ১০ ব্লক পর্যন্ত অনুমোদিত।';
-        } else if (errorMsg.includes('rate limit')) {
-            errorMsg = '⏳ রেট লিমিট অতিক্রম! ২ সেকেন্ড পর আবার চেষ্টা করছি...';
-            // Retry logic
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            // Recursive call
-            return downloadTop500Holders();
-        } else if (errorMsg.includes('Invalid API key')) {
-            errorMsg = '❌ API Key সঠিক নয়! Alchemy থেকে নতুন Key নিন।';
-        } else if (errorMsg.includes('network')) {
-            errorMsg = '🌐 নেটওয়ার্ক সমস্যা! ইন্টারনেট কানেকশন চেক করুন।';
-        }
-        
+        console.error(error);
         statusDiv.className = "error";
-        statusDiv.innerText = `❌ ${errorMsg}`;
         
-        // আরও বিস্তারিত জানান
-        if (error.data) {
-            console.log('Error details:', error.data);
+        let msg = error.message || 'অজানা এরর!';
+        if (msg.includes('block range')) {
+            msg = '⚠️ ব্লক রেঞ্জ খুব বড়! Free Tier এ ১০ ব্লক পর্যন্ত অনুমোদিত।';
+        } else if (msg.includes('Invalid API key')) {
+            msg = '❌ API Key সঠিক নয়!';
         }
         
+        statusDiv.innerText = `❌ ${msg}`;
     } finally {
         downloadBtn.disabled = false;
-        setTimeout(() => {
-            progressBar.style.display = 'none';
-        }, 5000);
     }
 }
 </script>
