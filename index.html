@@ -7,18 +7,22 @@
     <!-- Ethers.js v5 Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; }
+        body { font-family: Arial, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; text-align: center; }
         h2 { color: #111; margin-bottom: 20px; font-size: 20px; }
         .form-group { text-align: left; margin-bottom: 15px; }
         label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #333; }
         input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
         button { width: 100%; padding: 14px; background-color: #00c805; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
         button:hover { background-color: #00a304; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
         #status { margin-top: 15px; font-size: 14px; font-weight: bold; word-break: break-all; }
         .loading { color: #007bff; }
         .success { color: #28a745; }
         .error { color: #dc3545; }
+        .info { color: #6c757d; }
+        #progressBar { width: 100%; height: 8px; background: #e9ecef; border-radius: 4px; margin-top: 10px; overflow: hidden; display: none; }
+        #progressBar div { height: 100%; background: #007bff; border-radius: 4px; transition: width 0.3s; }
     </style>
 </head>
 <body>
@@ -28,16 +32,17 @@
     
     <div class="form-group">
         <label>Alchemy RPC URL:</label>
-        <input type="text" id="rpcUrl" value="https://robinhood-mainnet.g.alchemy.com/v2/-De1p3ZGJsjA0c2Bsih3t" />
+        <input type="text" id="rpcUrl" placeholder="https://robinhood-mainnet.g.alchemy.com/v2/YOUR_API_KEY" />
     </div>
 
     <div class="form-group">
         <label>NFT Contract Address:</label>
-        <input type="text" id="contractAddress" value="0xf08c65564eb07d880021105489552080b08e4319" />
+        <input type="text" id="contractAddress" placeholder="0xf08c65564eb07d880021105489552080b08e4319" />
     </div>
 
-    <button onclick="downloadTop500Holders()">Top 500 CSV ডাউনলোড করুন</button>
+    <button onclick="downloadTop500Holders()" id="downloadBtn">Top 500 CSV ডাউনলোড করুন</button>
 
+    <div id="progressBar"><div id="progressFill" style="width: 0%;"></div></div>
     <div id="status"></div>
 </div>
 
@@ -46,71 +51,98 @@ async function downloadTop500Holders() {
     const rpcUrl = document.getElementById('rpcUrl').value.trim();
     const contractAddress = document.getElementById('contractAddress').value.trim();
     const statusDiv = document.getElementById('status');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const progressFill = document.getElementById('progressFill');
+    const progressBar = document.getElementById('progressBar');
 
     if (!rpcUrl || !contractAddress) {
         alert("RPC URL এবং Contract Address দুটিই বাধ্যতামূলক!");
         return;
     }
 
-    statusDiv.className = "loading";
-    statusDiv.innerText = "Alchemy RPC দিয়ে কানেক্ট করা হচ্ছে...";
+    // Validate RPC URL
+    if (!rpcUrl.includes('/v2/') || rpcUrl.endsWith('/v2/') || rpcUrl.endsWith('/v2')) {
+        statusDiv.className = "error";
+        statusDiv.innerText = "❌ বৈধ Alchemy RPC URL দিন! (উদাহরণ: https://.../v2/YOUR_API_KEY)";
+        return;
+    }
+
+    downloadBtn.disabled = true;
+    progressBar.style.display = 'block';
+    progressFill.style.width = '0%';
 
     try {
-        const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+        statusDiv.className = "loading";
+        statusDiv.innerText = "⏳ RPC এর সাথে কানেক্ট হচ্ছে...";
 
-        // ERC-721 Standard ABI for Transfer and Balance Check
+        // Custom fetch for Alchemy
+        const provider = new ethers.providers.JsonRpcProvider({
+            url: rpcUrl,
+            skipFetchSetup: true
+        });
+
+        // Check connection
+        await provider.getBlockNumber();
+        statusDiv.innerText = "✅ RPC সংযোগ সফল!";
+
+        // ERC-721 ABI
         const abi = [
             "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
-            "function balanceOf(address owner) view returns (uint256)"
+            "function balanceOf(address owner) view returns (uint256)",
+            "function totalSupply() view returns (uint256)"
         ];
 
         const contract = new ethers.Contract(contractAddress, abi, provider);
 
-        statusDiv.innerText = "RPC থেকে Transfer Logs ডাটা নিয়ে আসা হচ্ছে...";
+        // Get current block number
+        const currentBlock = await provider.getBlockNumber();
+        statusDiv.innerText = `📊 বর্তমান ব্লক: ${currentBlock.toLocaleString()}`;
 
-        // Transfer Topics তৈরি
+        // Use a reasonable fromBlock (last 100k blocks or from contract creation)
+        const fromBlock = Math.max(0, currentBlock - 100000);
+        statusDiv.innerText = `🔍 ${fromBlock.toLocaleString()} থেকে ${currentBlock.toLocaleString()} ব্লক স্ক্যান করা হচ্ছে...`;
+
+        // Get Transfer events
         const filter = contract.filters.Transfer();
-        
-        // ব্লকচেইন থেকে সমস্ত Transfer events নিয়ে আসা
         const logs = await provider.getLogs({
-            fromBlock: 0,
-            toBlock: 'latest',
+            fromBlock: fromBlock,
+            toBlock: currentBlock,
             address: contractAddress,
             topics: filter.topics
         });
 
-        if (!logs || logs.length === 0) {
+        statusDiv.innerText = `📝 মোট ${logs.length.toLocaleString()} টি Transfer Event পাওয়া গেছে!`;
+
+        if (logs.length === 0) {
             statusDiv.className = "error";
-            statusDiv.innerText = "কোনো Transfer Events পাওয়া যায়নি!";
+            statusDiv.innerText = "❌ কোনো Transfer Events পাওয়া যায়নি! চেক করুন কন্ট্রাক্ট অ্যাড্রেস সঠিক কিনা।";
             return;
         }
 
-        statusDiv.innerText = `মোট ${logs.length} টি ট্রান্সফার থেকে ইউনিক অ্যাড্রেস বের করা হচ্ছে...`;
-
-        // সমস্ত ইউনিক ওয়ালেট অ্যাড্রেস সংগ্রহ করা
+        // Extract unique addresses from Transfer events
         const candidateAddresses = new Set();
         const zeroAddress = "0x0000000000000000000000000000000000000000";
 
-        logs.forEach(log => {
+        for (const log of logs) {
             try {
                 const parsed = contract.interface.parseLog(log);
-                if (parsed.args.to && parsed.args.to !== zeroAddress) {
-                    candidateAddresses.add(parsed.args.to);
+                const to = parsed.args.to;
+                if (to && to !== zeroAddress) {
+                    candidateAddresses.add(to);
                 }
             } catch (e) {
-                // Ignore invalid logs
+                // Skip invalid logs
             }
-        });
+        }
 
         const addressList = Array.from(candidateAddresses);
-        statusDiv.innerText = `${addressList.length} টি ইউনিক অ্যাড্রেসের লাইভ NFT ব্যালেন্স চেক করা হচ্ছে...`;
+        statusDiv.innerText = `👤 ${addressList.length.toLocaleString()} টি ইউনিক অ্যাড্রেস পেয়েছি! ব্যালেন্স চেক করা হচ্ছে...`;
 
-        // প্রতিটি ওয়ালেটের লাইভ NFT ব্যালেন্স কল করা
+        // Check balance for each address in batches
         const holderBalances = [];
-        let completed = 0;
+        const batchSize = 10;
+        let processed = 0;
 
-        // দ্রুত স্ক্যান করার জন্য ছোট ছোট ব্যাচে রিকোয়েস্ট পাঠানো
-        const batchSize = 20;
         for (let i = 0; i < addressList.length; i += batchSize) {
             const batch = addressList.slice(i, i + batchSize);
             const promises = batch.map(async (addr) => {
@@ -120,6 +152,7 @@ async function downloadTop500Holders() {
                     if (count > 0) {
                         return { address: addr, count: count };
                     }
+                    return null;
                 } catch (err) {
                     return null;
                 }
@@ -130,45 +163,69 @@ async function downloadTop500Holders() {
                 if (res) holderBalances.push(res);
             });
 
-            completed += batch.length;
-            statusDiv.innerText = `ব্যালেন্স স্ক্যান হচ্ছে: ${completed} / ${addressList.length}...`;
+            processed += batch.length;
+            const progress = Math.min(100, (processed / addressList.length) * 100);
+            progressFill.style.width = progress + '%';
+            statusDiv.innerText = `⏳ ব্যালেন্স চেক হচ্ছে: ${processed.toLocaleString()} / ${addressList.length.toLocaleString()} (${Math.round(progress)}%)`;
         }
 
         if (holderBalances.length === 0) {
             statusDiv.className = "error";
-            statusDiv.innerText = "কোনো একটিভ হোল্ডার খুঁজে পাওয়া যায়নি!";
+            statusDiv.innerText = "❌ কোনো একটিভ হোল্ডার খুঁজে পাওয়া যায়নি!";
             return;
         }
 
-        // যার কাছে বেশি NFT আছে তাকে আগে রেখে সাজানো (Descending Order)
+        // Sort by NFT count (descending)
         holderBalances.sort((a, b) => b.count - a.count);
 
-        // শীর্ষ ৫০০ জন নেওয়া
+        // Take top 500
         const top500 = holderBalances.slice(0, 500);
 
-        // CSV ডাটা তৈরি
+        // Prepare CSV
         let csvContent = "Wallet Address,NFT Balance\n";
         top500.forEach(item => {
             csvContent += `"${item.address}",${item.count}\n`;
         });
 
-        // CSV ফাইল ডাউনলোড
+        // Download CSV
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `robinhood_rpc_top_500_holders_${contractAddress}.csv`;
+        a.download = `robinhood_top_500_holders_${contractAddress.slice(0, 10)}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
         statusDiv.className = "success";
-        statusDiv.innerText = `সফলভাবে টপ ${top500.length} জন হোল্ডারের CSV ডাউনলোড হয়েছে!`;
+        statusDiv.innerText = `✅ সফলভাবে টপ ${top500.length} জন হোল্ডারের CSV ডাউনলোড হয়েছে!`;
+        progressFill.style.width = '100%';
 
     } catch (error) {
-        console.error(error);
+        console.error('Error:', error);
+        let errorMsg = error.message || 'অজানা এরর!';
+        
+        // User-friendly error messages
+        if (errorMsg.includes('missing response')) {
+            errorMsg = 'RPC সার্ভার রেসপন্স দিচ্ছে না। API Key চেক করুন!';
+        } else if (errorMsg.includes('Invalid API key')) {
+            errorMsg = '❌ API Key সঠিক নয়! Alchemy থেকে নতুন Key নিন।';
+        } else if (errorMsg.includes('rate limit')) {
+            errorMsg = '⏳ রেট লিমিট অতিক্রম! একটু পরে আবার চেষ্টা করুন।';
+        } else if (errorMsg.includes('execution reverted')) {
+            errorMsg = 'কন্ট্রাক্ট অ্যাড্রেস সঠিক নয় অথবা এটি ERC-721 নয়!';
+        } else if (errorMsg.includes('Could not parse')) {
+            errorMsg = 'অ্যাড্রেস ফরম্যাট সঠিক নয়!';
+        }
+        
         statusDiv.className = "error";
-        statusDiv.innerText = "RPC Error: " + error.message;
+        statusDiv.innerText = `❌ ${errorMsg}`;
+    } finally {
+        downloadBtn.disabled = false;
+        setTimeout(() => {
+            progressBar.style.display = 'none';
+        }, 3000);
     }
 }
 </script>
