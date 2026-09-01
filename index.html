@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mr.Stonk // Early Access Allowlist</title>
+  <title>Mini Brokers // Early Access Allowlist</title>
 
   <!-- External Environment Config File Loader -->
   <script src="./env.js"></script>
@@ -53,7 +53,7 @@
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
       } else {
-        console.warn("Mr.Stonk System: Firebase running in fallback mode (No env API Key detected).");
+        console.warn("Mini Brokers System: Firebase running in fallback mode (No env API Key detected).");
       }
     } catch (e) {
       console.error("Firebase Initialization Error:", e);
@@ -921,12 +921,12 @@
     <div class="brand-container">
       <img 
         src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/2.png" 
-        alt="Mr.Stonk Logo" 
+        alt="Mini Brokers Logo" 
         class="brand-logo"
         onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
       />
-      <div id="logo-fallback" class="brand-logo-fallback" style="display: none;">MS</div>
-      <div class="brand-title">Mr.<span>STONK</span></div>
+      <div id="logo-fallback" class="brand-logo-fallback" style="display: none;">MB</div>
+      <div class="brand-title">Mini <span>Brokers</span></div>
     </div>
     <div class="nav-actions">
       <button class="btn-secondary" onclick="openLeaderboardModal()">
@@ -945,9 +945,9 @@
         <span class="pulse-dot"></span>
         EARLY ACCESS // ALLOWLIST OPEN
       </div>
-      <h1 class="hero-title">MR.STONK // EARLY ACCESS</h1>
+      <h1 class="hero-title">MINI BROKERS // EARLY ACCESS</h1>
       <p class="hero-subtitle">
-        Join the official Mr.Stonk early access allowlist. Complete the verification steps below and register the EVM wallet address you want associated with your allocation.
+        Join the official Mini Brokers early access allowlist. Complete the verification steps below and register the EVM wallet address you want associated with your allocation.
       </p>
     </section>
 
@@ -1016,14 +1016,14 @@
       <div id="step-2" class="flow-card" style="display: none;">
         <div class="card-header">
           <h2><i class="fa-solid fa-user-check"></i> Complete Verification</h2>
-          <p>Complete the required Mr.Stonk social actions below. Open each action, complete it on X, then return here and mark the step as complete.</p>
+          <p>Complete the required Mini Brokers social actions below. Open each action, complete it on X, then return here and mark the step as complete.</p>
         </div>
 
         <div class="instruction-box">
           <strong><i class="fa-solid fa-circle-info"></i> How it works</strong>
           1. Open the action on X.<br />
           2. Complete the requested action.<br />
-          3. Return to Mr.Stonk and mark completed.<br />
+          3. Return to Mini Brokers and mark completed.<br />
           4. Continue once all required actions are marked complete.
         </div>
 
@@ -1031,8 +1031,8 @@
           <!-- Task 1: Follow -->
           <div class="task-card" id="task-card-1">
             <div class="task-details">
-              <h4>Follow Mr.Stonk</h4>
-              <p>Follow the official Mr.Stonk account on X (@0xMrStonk).</p>
+              <h4>Follow Mini Brokers</h4>
+              <p>Follow the official Mini Brokers account on X (@MiniBrokers).</p>
             </div>
             <button class="btn-task" id="btn-task-1" onclick="handleTaskAction(1)">
               OPEN X <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -1043,7 +1043,7 @@
           <div class="task-card" id="task-card-2">
             <div class="task-details">
               <h4>Like the Announcement</h4>
-              <p>Like the official Mr.Stonk announcement post.</p>
+              <p>Like the official Mini Brokers announcement post.</p>
             </div>
             <button class="btn-task" id="btn-task-2" onclick="handleTaskAction(2)">
               OPEN X <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -1054,7 +1054,7 @@
           <div class="task-card" id="task-card-3">
             <div class="task-details">
               <h4>Repost the Announcement</h4>
-              <p>Repost the official Mr.Stonk announcement to help spread the launch.</p>
+              <p>Repost the official Mini Brokers announcement to help spread the launch.</p>
             </div>
             <button class="btn-task" id="btn-task-3" onclick="handleTaskAction(3)">
               OPEN X <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -1078,7 +1078,7 @@
       <div id="step-3" class="flow-card" style="display: none;">
         <div class="card-header">
           <h2><i class="fa-solid fa-wallet"></i> Register Your Wallet</h2>
-          <p>Enter the EVM wallet address you want associated with your Mr.Stonk allowlist entry.</p>
+          <p>Enter the EVM wallet address you want associated with your Mini Brokers allowlist entry.</p>
         </div>
 
         <div class="input-group">
@@ -1113,7 +1113,7 @@
             <i class="fa-solid fa-circle-check"></i> ALLOWLIST ENTRY CONFIRMED
           </div>
           <h2 style="font-family: var(--font-mono); font-size: 1.6rem; font-weight: 800;">YOU'RE ON THE LIST</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Your Mr.Stonk allowlist registration has been successfully recorded.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Your Mini Brokers allowlist registration has been successfully recorded.</p>
         </div>
 
         <!-- DYNAMIC X POST BANNER CARD -->
@@ -1123,11 +1123,11 @@
               <div class="pass-brand">
                 <img 
                   src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/1.png" 
-                  alt="Mr.Stonk Logo"
+                  alt="Mini Brokers Logo"
                   onerror="this.style.display='none';"
                   crossorigin="anonymous"
                 />
-                <span>Mr.STONK</span>
+                <span>Mini BROKERS</span>
               </div>
               <div class="pass-tag">OFFICIAL PASS</div>
             </div>
@@ -1175,10 +1175,10 @@
             <i class="fa-solid fa-users" style="color: var(--accent-cyan);"></i> INVITE FRIENDS
           </h4>
           <p style="font-size: 0.825rem; color: var(--text-muted);">
-            Share your personal Mr.Stonk referral link and help others join the allowlist.
+            Share your personal Mini Brokers referral link and help others join the allowlist.
           </p>
           <div class="input-wrapper">
-            <input type="text" id="referral-link-input" class="input-field" readonly value="https://mrstonk.app/?ref=username" />
+            <input type="text" id="referral-link-input" class="input-field" readonly value="https://minibrokers.app/?ref=username" />
           </div>
           <button class="btn-secondary" style="justify-content: center; background: rgba(0, 240, 255, 0.1); border-color: var(--accent-cyan);" onclick="copyReferralLink()">
             <i class="fa-solid fa-copy"></i> Copy Referral Link
@@ -1220,7 +1220,7 @@
 
   <!-- FOOTER -->
   <footer>
-    &copy; 2026 Mr.Stonk // Early Access Protocol. All rights reserved.
+    &copy; 2026 Mini Brokers // Early Access Protocol. All rights reserved.
   </footer>
 
   <!-- TOAST NOTIFICATION -->
@@ -1234,8 +1234,8 @@
     /* ==========================================
        CONFIGURED X (TWITTER) CONSTANTS
        ========================================== */
-    const PROJECT_NAME = "Mr.Stonk";
-    const PROJECT_HANDLE = "0xMrStonk"; 
+    const PROJECT_NAME = "Mini Brokers";
+    const PROJECT_HANDLE = "MiniBrokers"; 
     const TWEET_ID = "2093023734089072951";
     const FALLBACK_LOGO = "https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/1.png";
 
@@ -1524,7 +1524,7 @@
         allowTaint: true
       }).then(canvas => {
         const link = document.createElement("a");
-        link.download = `MrStonk-Allowlist-Pass-${state.username}.png`;
+        link.download = `MiniBrokers-Allowlist-Pass-${state.username}.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
         showToast("Banner Pass downloaded successfully!");
