@@ -1,768 +1,1569 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CYBERPASS // Elite Web3 Allowlist Protocol</title>
-    
-    <!-- Open Graph & Twitter Card Metadata -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://yourdomain.com/">
-    <meta property="og:title" content="CYBERPASS // Early Access Protocol">
-    <meta property="og:description" content="Claim your ultra-rare futuristic Web3 Pass & secure guaranteed token allocation.">
-    <meta property="og:image" content="https://unavatar.io/x/ethereum">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mr.Stonk // Early Access Allowlist</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        cyber: {
-                            black: '#040408',
-                            dark: '#0a0b14',
-                            card: '#0f1122',
-                            neon: '#00ffcc',
-                            purple: '#8a2be2',
-                            pink: '#ff007f',
-                            gold: '#ffd700'
-                        }
-                    },
-                    fontFamily: {
-                        orbitron: ['Orbitron', 'sans-serif'],
-                        rajdhani: ['Rajdhani', 'sans-serif'],
-                        sans: ['Space Grotesk', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+  <!-- External Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <!-- External Libraries -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Firebase Modular Web SDK (v10) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      getDocs, 
+      query, 
+      where, 
+      orderBy, 
+      limit, 
+      increment, 
+      runTransaction 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    <style>
-        body {
-            background-color: #040408;
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(138, 43, 226, 0.25), transparent 60%),
-                radial-gradient(circle at 100% 100%, rgba(0, 255, 204, 0.12), transparent 50%),
-                radial-gradient(circle at 0% 50%, rgba(255, 0, 127, 0.1), transparent 40%);
-            font-family: 'Space Grotesk', sans-serif;
-        }
+    // Firebase Config Placeholder (Insert actual credentials for deployment)
+    const firebaseConfig = {
+      apiKey: "YOUR_FIREBASE_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-        .cyber-grid {
-            background-size: 50px 50px;
-            background-image: 
-                linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-        }
+    // Initialize Firebase safely
+    let db = null;
+    try {
+      if (firebaseConfig.apiKey !== "YOUR_FIREBASE_API_KEY") {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+      } else {
+        console.warn("Mr.Stonk System: Firebase running in local fallback mode (placeholder config detected).");
+      }
+    } catch (e) {
+      console.error("Firebase Initialization Error:", e);
+    }
 
-        .neon-glow-btn {
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4), inset 0 0 10px rgba(0, 255, 204, 0.2);
-            border: 1px solid rgba(0, 255, 204, 0.8);
-        }
-        .neon-glow-btn:hover {
-            box-shadow: 0 0 35px rgba(0, 255, 204, 0.8), inset 0 0 15px rgba(0, 255, 204, 0.4);
-        }
+    window.db = db;
+    window.fsModules = { collection, doc, setDoc, getDoc, getDocs, query, where, orderBy, limit, increment, runTransaction };
+  </script>
 
-        .glass-card {
-            background: rgba(15, 17, 34, 0.75);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-        }
+  <style>
+    /* ==========================================
+       CSS VARIABLES & THEME SETUP
+       ========================================== */
+    :root {
+      --bg-dark: #07090e;
+      --bg-card: rgba(13, 17, 25, 0.75);
+      --bg-card-hover: rgba(18, 24, 38, 0.85);
+      --border-color: rgba(0, 255, 163, 0.15);
+      --border-accent: #00ff22;
+      
+      --accent-green: #00ff22;
+      --accent-green-glow: rgba(0, 255, 163, 0.25);
+      --accent-cyan: #00f0ff;
+      --accent-cyan-glow: rgba(0, 240, 255, 0.2);
+      
+      --text-main: #f0f4f8;
+      --text-muted: #8a99ad;
+      --text-subtle: #526071;
+      
+      --danger: #ff3366;
+      --warning: #ffb800;
+      
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+      
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+    }
 
-        /* Scanline Animation Effect */
-        .scanline {
-            width: 100%;
-            height: 2px;
-            background: rgba(0, 255, 204, 0.6);
-            position: absolute;
-            top: 0;
-            left: 0;
-            animation: scan 4s linear infinite;
-            box-shadow: 0 0 15px #00ffcc;
-        }
-        @keyframes scan {
-            0% { top: 0%; }
-            100% { top: 100%; }
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        /* Pass Frames Theme CSS */
-        .frame-neon {
-            background: linear-gradient(135deg, #0f1122 0%, #05060c 100%);
-            border: 2px solid #00ffcc;
-            box-shadow: 0 0 25px rgba(0, 255, 204, 0.3);
-        }
-        .frame-gold {
-            background: linear-gradient(135deg, #1c1602 0%, #080601 100%);
-            border: 2px solid #ffd700;
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
-        }
-        .frame-purple {
-            background: linear-gradient(135deg, #180828 0%, #080310 100%);
-            border: 2px solid #8a2be2;
-            box-shadow: 0 0 25px rgba(138, 43, 226, 0.4);
-        }
-    </style>
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 80% 100%, rgba(0, 255, 163, 0.05) 0%, transparent 50%),
+        linear-gradient(to bottom, rgba(7, 9, 14, 0.8), rgba(7, 9, 14, 0.95));
+      background-attachment: fixed;
+    }
+
+    /* Ambient Background Grid */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; outline: none; font-family: var(--font-sans); }
+
+    /* ==========================================
+       HEADER & NAVBAR
+       ========================================== */
+    header {
+      width: 100%;
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(7, 9, 14, 0.8);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      object-fit: contain;
+      border: 1px solid var(--border-color);
+      background: rgba(0,0,0,0.4);
+    }
+
+    .brand-logo-fallback {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+      color: #000;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    .brand-title {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+
+    .brand-title span {
+      color: var(--accent-green);
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      padding: 0.6rem 1.1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* ==========================================
+       MAIN LAYOUT & CONTAINER
+       ========================================== */
+    main {
+      flex: 1;
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .hero-section {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0, 255, 163, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--accent-green);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.35rem 0.85rem;
+      border-radius: 50px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .badge-status .pulse-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    .hero-title {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 2.25rem;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .hero-subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      max-width: 580px;
+      line-height: 1.6;
+    }
+
+    /* ==========================================
+       STEP PROGRESS BAR
+       ========================================== */
+    .step-progress-container {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-subtle);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-dark);
+      transition: all 0.3s ease;
+    }
+
+    .step-label {
+      font-family: var(--font-mono);
+      font-size: 0.725rem;
+      font-weight: 700;
+      color: var(--text-subtle);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+
+    .step-item.active .step-num {
+      border-color: var(--accent-green);
+      color: #000;
+      background: var(--accent-green);
+      box-shadow: 0 0 12px var(--accent-green-glow);
+    }
+
+    .step-item.active .step-label {
+      color: var(--text-main);
+    }
+
+    .step-item.completed .step-num {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      background: rgba(0, 240, 255, 0.1);
+    }
+
+    .step-item.completed .step-label {
+      color: var(--text-muted);
+    }
+
+    /* ==========================================
+       CARD & FORM STYLES
+       ========================================== */
+    .flow-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      transition: transform 0.2s ease;
+    }
+
+    .card-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 1rem;
+    }
+
+    .card-header h2 {
+      font-family: var(--font-mono);
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .card-header p {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .input-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-field {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .input-field:focus {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green-glow);
+    }
+
+    .input-field.error {
+      border-color: var(--danger);
+      box-shadow: 0 0 10px rgba(255, 51, 102, 0.2);
+    }
+
+    .input-helper {
+      font-size: 0.775rem;
+      color: var(--text-subtle);
+      margin-top: 0.25rem;
+    }
+
+    .input-helper.error-text {
+      color: var(--danger);
+    }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent-green), #00d084);
+      color: #07090e;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 0.95rem 1.5rem;
+      border-radius: var(--radius-sm);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px var(--accent-green-glow);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0, 255, 163, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ==========================================
+       X PROFILE PREVIEW CARD
+       ========================================== */
+    .profile-preview-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .profile-info {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .profile-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--accent-green);
+    }
+
+    .profile-meta .profile-handle {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #fff;
+    }
+
+    .profile-meta .profile-status {
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+    }
+
+    /* ==========================================
+       TASK LIST (STEP 2)
+       ========================================== */
+    .instruction-box {
+      background: rgba(0, 240, 255, 0.04);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      font-size: 0.825rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .instruction-box strong {
+      color: var(--accent-cyan);
+      font-family: var(--font-mono);
+      display: block;
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .task-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .task-card.completed {
+      border-color: rgba(0, 255, 163, 0.3);
+      background: rgba(0, 255, 163, 0.03);
+    }
+
+    .task-details h4 {
+      font-size: 0.925rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .task-details p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .btn-task {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.775rem;
+      font-weight: 700;
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-task:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-task.done {
+      background: rgba(0, 255, 163, 0.12);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    /* ==========================================
+       ALLOWLIST PASS SCREEN (STEP 4)
+       ========================================== */
+    .pass-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      text-align: center;
+    }
+
+    .pass-card-wrapper {
+      width: 100%;
+      max-width: 440px;
+      perspective: 1000px;
+    }
+
+    .pass-card {
+      background: linear-gradient(145deg, rgba(18, 24, 38, 0.95), rgba(7, 9, 14, 0.98));
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: 0 0 35px rgba(0, 255, 163, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .pass-card::before {
+      content: "";
+      position: absolute;
+      top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle at 30% 30%, rgba(0, 255, 163, 0.08), transparent 50%);
+      pointer-events: none;
+    }
+
+    .pass-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+      padding-bottom: 1rem;
+    }
+
+    .pass-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .pass-brand img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+    }
+
+    .pass-brand span {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 1px;
+    }
+
+    .pass-tag {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #000;
+      background: var(--accent-green);
+      padding: 0.25rem 0.55rem;
+      border-radius: 4px;
+      letter-spacing: 1px;
+    }
+
+    .pass-user-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .pass-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-green);
+      object-fit: cover;
+    }
+
+    .pass-user-info .pass-username {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #fff;
+    }
+
+    .pass-user-info .pass-role {
+      font-size: 0.775rem;
+      color: var(--accent-cyan);
+    }
+
+    .pass-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      background: rgba(0,0,0,0.3);
+      padding: 0.85rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .pass-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .pass-field-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-subtle);
+      letter-spacing: 0.5px;
+    }
+
+    .pass-field-value {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .pass-actions {
+      display: flex;
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    .referral-box {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      text-align: left;
+    }
+
+    /* ==========================================
+       LEADERBOARD SECTION
+       ========================================== */
+    .leaderboard-section {
+      margin-top: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      backdrop-filter: blur(12px);
+    }
+
+    .leaderboard-header {
+      margin-bottom: 1.25rem;
+    }
+
+    .leaderboard-header h3 {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .leaderboard-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      color: var(--text-subtle);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.725rem;
+      letter-spacing: 1px;
+    }
+
+    .leaderboard-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text-main);
+    }
+
+    .rank-cell {
+      font-weight: 800;
+      width: 60px;
+    }
+
+    .rank-1 { color: #ffd700; }
+    .rank-2 { color: #c0c0c0; }
+    .rank-3 { color: #cd7f32; }
+
+    /* ==========================================
+       FOOTER
+       ========================================== */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.775rem;
+      color: var(--text-subtle);
+      background: rgba(7, 9, 14, 0.9);
+      margin-top: auto;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--accent-green);
+      color: var(--text-main);
+      padding: 0.85rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      max-width: 500px;
+      width: 100%;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      position: relative;
+    }
+
+    /* Mobile Responsive Adjustments */
+    @media (max-width: 640px) {
+      header { padding: 1rem; }
+      main { padding: 1.5rem 1rem; }
+      .hero-title { font-size: 1.65rem; }
+      .step-progress-container { padding: 1rem 0.75rem; }
+      .step-label { font-size: 0.65rem; }
+      .flow-card { padding: 1.25rem; }
+      .pass-grid { grid-template-columns: 1fr; }
+      .pass-actions { flex-direction: column; }
+    }
+  </style>
 </head>
-<body class="text-slate-100 min-h-screen cyber-grid flex flex-col justify-between items-center relative overflow-x-hidden">
+<body>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 bg-cyber-dark/90 backdrop-blur-md border border-cyber-neon text-cyber-neon px-6 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 font-rajdhani text-lg">
-        <i data-lucide="shield-check" class="w-6 h-6"></i>
-        <span id="toast-message" class="font-bold tracking-wide">Action Executed</span>
+  <!-- HEADER -->
+  <header>
+    <div class="brand-container">
+      <img 
+        src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/1.png" 
+        alt="Mr.Stonk Logo" 
+        class="brand-logo"
+        onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
+      />
+      <div id="logo-fallback" class="brand-logo-fallback" style="display: none;">MS</div>
+      <div class="brand-title">Mr.<span>STONK</span></div>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-secondary" onclick="openLeaderboardModal()">
+        <i class="fa-solid => fa-trophy" style="color: var(--warning);"></i>
+        Leaderboard
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main>
+
+    <!-- HERO SECTION -->
+    <section class="hero-section">
+      <div class="badge-status">
+        <span class="pulse-dot"></span>
+        EARLY ACCESS // ALLOWLIST OPEN
+      </div>
+      <h1 class="hero-title">MR.STONK // EARLY ACCESS</h1>
+      <p class="hero-subtitle">
+        Join the official Mr.Stonk early access allowlist. Complete the verification steps below and register the EVM wallet address you want associated with your allocation.
+      </p>
+    </section>
+
+    <!-- STEP PROGRESS INDICATOR -->
+    <div class="step-progress-container">
+      <div class="step-item active" id="step-indicator-1">
+        <div class="step-num">01</div>
+        <div class="step-label">IDENTITY</div>
+      </div>
+      <div class="step-item" id="step-indicator-2">
+        <div class="step-num">02</div>
+        <div class="step-label">VERIFY</div>
+      </div>
+      <div class="step-item" id="step-indicator-3">
+        <div class="step-num">03</div>
+        <div class="step-label">WALLET</div>
+      </div>
     </div>
 
-    <!-- Top Header -->
-    <header class="w-full max-w-6xl px-6 py-6 flex justify-between items-center z-20">
-        <div class="flex items-center space-x-3">
-            <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyber-purple via-cyber-pink to-cyber-neon p-0.5 shadow-lg shadow-cyber-purple/30">
-                <div class="w-full h-full bg-cyber-black rounded-[14px] flex items-center justify-center font-orbitron font-black text-cyber-neon text-xl">
-                    CP
-                </div>
-            </div>
-            <span class="font-orbitron font-black text-2xl tracking-wider bg-gradient-to-r from-white via-slate-200 to-cyber-neon bg-clip-text text-transparent">
-                CYBER<span class="text-cyber-neon">PASS</span>
-            </span>
+    <!-- FLOW CONTAINER -->
+    <div id="flow-content">
+
+      <!-- STEP 1: IDENTITY -->
+      <div id="step-1" class="flow-card">
+        <div class="card-header">
+          <h2><i class="fa-brands fa-x-twitter"></i> Verify Your Identity</h2>
+          <p>Start your allowlist registration by entering your X username. We'll use it to associate your social verification and allowlist entry.</p>
         </div>
-        <button id="nav-leaderboard-btn" class="flex items-center space-x-2 font-rajdhani font-bold text-base bg-cyber-card/80 border border-slate-700/80 hover:border-cyber-neon px-5 py-2.5 rounded-2xl transition duration-200 shadow-lg hover:shadow-cyber-neon/20">
-            <i data-lucide="trophy" class="w-5 h-5 text-cyber-neon"></i>
-            <span>LEADERBOARD</span>
+
+        <div class="input-group">
+          <label class="input-label" for="x-username-input">X USERNAME</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="x-username-input" 
+              class="input-field" 
+              placeholder="Enter your X username" 
+              autocomplete="off"
+              oninput="handleUsernameInput(this.value)"
+            />
+          </div>
+          <div id="username-helper" class="input-helper">Enter your username without the @ symbol.</div>
+        </div>
+
+        <!-- PROFILE PREVIEW (Hidden by default) -->
+        <div id="profile-preview-container" style="display: none;">
+          <div class="profile-preview-card">
+            <div class="profile-info">
+              <img id="preview-avatar" src="" alt="Avatar Preview" class="profile-avatar" />
+              <div class="profile-meta">
+                <div id="preview-handle" class="profile-handle">@username</div>
+                <div class="profile-status"><i class="fa-solid fa-circle-check"></i> Profile preview found</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-step-1" class="btn-primary" onclick="submitStep1()" disabled>
+          CONTINUE TO VERIFICATION <i class="fa-solid fa-arrow-right"></i>
         </button>
-    </header>
 
-    <!-- Main Container -->
-    <main class="w-full max-w-2xl px-4 py-6 z-20 my-auto">
-        
-        <!-- Hero Title Header -->
-        <div class="text-center mb-8 space-y-2">
-            <span class="font-orbitron text-xs font-bold uppercase tracking-[0.3em] text-cyber-neon bg-cyber-neon/10 px-4 py-1.5 rounded-full border border-cyber-neon/30">
-                Phase 1 // Early Allocation Live
-            </span>
-            <h1 class="text-3xl md:text-5xl font-orbitron font-black tracking-tight text-white">
-                ALLOWLIST <span class="bg-gradient-to-r from-cyber-neon via-sky-400 to-cyber-purple bg-clip-text text-transparent">ACCESS</span>
-            </h1>
+        <p class="input-helper" style="text-align: center;">Your X username is used solely to identify your allowlist registration record.</p>
+      </div>
+
+      <!-- STEP 2: SOCIAL VERIFICATION (Hidden by default) -->
+      <div id="step-2" class="flow-card" style="display: none;">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-user-check"></i> Complete Verification</h2>
+          <p>Complete the required Mr.Stonk social actions below. Open each action, complete it on X, then return here and mark the step as complete.</p>
         </div>
 
-        <!-- Animated Cyber Step Indicator -->
-        <div id="step-indicator" class="mb-8 flex justify-between items-center relative px-6">
-            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-800/80 -z-10 rounded-full"></div>
-            <div id="line-progress" class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-cyber-purple to-cyber-neon transition-all duration-500 -z-10 rounded-full shadow-[0_0_10px_#00ffcc]" style="width: 0%;"></div>
-
-            <!-- Step 1 -->
-            <div class="step-node active flex flex-col items-center space-y-2" data-step="1">
-                <div class="node-circle w-10 h-10 rounded-2xl bg-cyber-neon text-cyber-black font-orbitron font-black flex items-center justify-center text-base border-2 border-cyber-neon transition-all duration-300 shadow-[0_0_15px_#00ffcc]">01</div>
-                <span class="font-rajdhani text-xs uppercase font-bold text-cyber-neon tracking-widest">IDENTITY</span>
-            </div>
-            <!-- Step 2 -->
-            <div class="step-node flex flex-col items-center space-y-2" data-step="2">
-                <div class="node-circle w-10 h-10 rounded-2xl bg-cyber-card text-slate-500 font-orbitron font-black flex items-center justify-center text-base border-2 border-slate-800 transition-all duration-300">02</div>
-                <span class="font-rajdhani text-xs uppercase font-bold text-slate-500 tracking-widest">TASKS</span>
-            </div>
-            <!-- Step 3 -->
-            <div class="step-node flex flex-col items-center space-y-2" data-step="3">
-                <div class="node-circle w-10 h-10 rounded-2xl bg-cyber-card text-slate-500 font-orbitron font-black flex items-center justify-center text-base border-2 border-slate-800 transition-all duration-300">03</div>
-                <span class="font-rajdhani text-xs uppercase font-bold text-slate-500 tracking-widest">WALLET</span>
-            </div>
+        <div class="instruction-box">
+          <strong><i class="fa-solid fa-circle-info"></i> How it works</strong>
+          1. Open the action on X.<br />
+          2. Complete the requested action.<br />
+          3. Return to Mr.Stonk and mark completed.<br />
+          4. Continue once all required actions are marked complete.
         </div>
 
-        <!-- Form Glass Container -->
-        <div class="glass-card rounded-3xl p-6 md:p-10 relative overflow-hidden">
-            <div class="scanline"></div>
-
-            <!-- STEP 1: X Handle Search -->
-            <section id="step-1" class="space-y-6">
-                <div class="border-b border-slate-800/80 pb-4">
-                    <h2 class="text-xl font-orbitron font-bold text-white flex items-center space-x-2">
-                        <i data-lucide="user-check" class="text-cyber-neon w-5 h-5"></i>
-                        <span>Identity Verification</span>
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-1 font-rajdhani text-sm">Enter your X (Twitter) username to fetch protocol identity.</p>
-                </div>
-
-                <div class="space-y-3">
-                    <label class="block font-orbitron text-xs font-semibold tracking-wider text-slate-300">X USERNAME</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 font-orbitron font-bold">@</span>
-                        <input type="text" id="username-input" autocomplete="off" placeholder="username" class="w-full bg-cyber-dark/90 border border-slate-700/80 focus:border-cyber-neon focus:ring-1 focus:ring-cyber-neon rounded-2xl py-4 pl-10 pr-4 text-slate-100 font-rajdhani text-lg font-bold placeholder-slate-600 outline-none transition duration-200">
-                        <div id="search-spinner" class="hidden absolute right-4 top-1/2 -translate-y-1/2">
-                            <i data-lucide="loader-2" class="w-6 h-6 text-cyber-neon animate-spin"></i>
-                        </div>
-                    </div>
-
-                    <!-- Instant Suggestion Box -->
-                    <div id="profile-suggestion" class="hidden cursor-pointer p-4 bg-cyber-dark/90 hover:bg-slate-900 border border-cyber-neon/50 rounded-2xl flex items-center justify-between transition duration-200 shadow-xl">
-                        <div class="flex items-center space-x-4">
-                            <img id="suggested-avatar" src="" alt="Avatar" class="w-12 h-12 rounded-xl border-2 border-cyber-neon object-cover bg-slate-800">
-                            <div>
-                                <p id="suggested-name" class="font-orbitron font-bold text-white text-sm">@username</p>
-                                <p class="text-xs font-rajdhani text-cyber-neon font-bold flex items-center space-x-1 mt-0.5">
-                                    <span>Profile Found & Ready</span>
-                                </p>
-                            </div>
-                        </div>
-                        <span class="text-xs font-orbitron font-bold text-black bg-cyber-neon px-3 py-1.5 rounded-xl">SELECT</span>
-                    </div>
-                </div>
-
-                <button id="btn-step-1-next" disabled class="w-full py-4 rounded-2xl bg-slate-800 text-slate-600 font-orbitron font-bold tracking-wider cursor-not-allowed transition duration-300 flex items-center justify-center space-x-2 text-sm">
-                    <span>NEXT STEP</span>
-                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                </button>
-            </section>
-
-            <!-- STEP 2: Premium Social Task Cards -->
-            <section id="step-2" class="hidden space-y-6">
-                <div class="border-b border-slate-800/80 pb-4">
-                    <h2 class="text-xl font-orbitron font-bold text-white flex items-center space-x-2">
-                        <i data-lucide="shield-alert" class="text-cyber-neon w-5 h-5"></i>
-                        <span>Protocol Verifications</span>
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-1 font-rajdhani text-sm">Complete required protocol actions to validate your spot.</p>
-                </div>
-
-                <div class="space-y-3.5">
-                    <!-- Task 1 -->
-                    <button id="task-follow" class="task-btn w-full p-4 bg-cyber-dark/80 hover:bg-slate-900/90 border border-slate-800 hover:border-slate-600 rounded-2xl flex items-center justify-between transition duration-200 group">
-                        <div class="flex items-center space-x-3.5">
-                            <div class="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-300 group-hover:text-cyber-neon group-hover:border-cyber-neon transition">
-                                <i data-lucide="twitter" class="w-5 h-5"></i>
-                            </div>
-                            <span class="font-rajdhani font-bold text-base text-slate-200">Follow Official Account</span>
-                        </div>
-                        <span class="status-badge font-orbitron text-xs px-4 py-2 rounded-xl bg-slate-800 text-slate-400 font-bold border border-slate-700">VERIFY</span>
-                    </button>
-
-                    <!-- Task 2 -->
-                    <button id="task-like" class="task-btn w-full p-4 bg-cyber-dark/80 hover:bg-slate-900/90 border border-slate-800 hover:border-slate-600 rounded-2xl flex items-center justify-between transition duration-200 group">
-                        <div class="flex items-center space-x-3.5">
-                            <div class="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-300 group-hover:text-cyber-pink group-hover:border-cyber-pink transition">
-                                <i data-lucide="heart" class="w-5 h-5"></i>
-                            </div>
-                            <span class="font-rajdhani font-bold text-base text-slate-200">Like Main Announcement</span>
-                        </div>
-                        <span class="status-badge font-orbitron text-xs px-4 py-2 rounded-xl bg-slate-800 text-slate-400 font-bold border border-slate-700">VERIFY</span>
-                    </button>
-
-                    <!-- Task 3 -->
-                    <button id="task-retweet" class="task-btn w-full p-4 bg-cyber-dark/80 hover:bg-slate-900/90 border border-slate-800 hover:border-slate-600 rounded-2xl flex items-center justify-between transition duration-200 group">
-                        <div class="flex items-center space-x-3.5">
-                            <div class="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-300 group-hover:text-cyber-purple group-hover:border-cyber-purple transition">
-                                <i data-lucide="repeat" class="w-5 h-5"></i>
-                            </div>
-                            <span class="font-rajdhani font-bold text-base text-slate-200">Retweet Protocol Launch</span>
-                        </div>
-                        <span class="status-badge font-orbitron text-xs px-4 py-2 rounded-xl bg-slate-800 text-slate-400 font-bold border border-slate-700">VERIFY</span>
-                    </button>
-                </div>
-
-                <div class="flex space-x-3 pt-2">
-                    <button id="btn-step-2-back" class="w-1/3 py-4 rounded-2xl bg-cyber-dark border border-slate-800 text-slate-300 font-orbitron font-bold hover:bg-slate-800 transition">BACK</button>
-                    <button id="btn-step-2-next" disabled class="w-2/3 py-4 rounded-2xl bg-slate-800 text-slate-600 font-orbitron font-bold tracking-wider cursor-not-allowed transition flex items-center justify-center space-x-2 text-sm">
-                        <span>CONTINUE</span>
-                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            </section>
-
-            <!-- STEP 3: EVM Input -->
-            <section id="step-3" class="hidden space-y-6">
-                <div class="border-b border-slate-800/80 pb-4">
-                    <h2 class="text-xl font-orbitron font-bold text-white flex items-center space-x-2">
-                        <i data-lucide="wallet" class="text-cyber-neon w-5 h-5"></i>
-                        <span>Destination Address</span>
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-1 font-rajdhani text-sm">Provide your EVM Public Wallet for Allowlist indexing.</p>
-                </div>
-
-                <div class="space-y-3">
-                    <label class="block font-orbitron text-xs font-semibold tracking-wider text-slate-300">EVM ADDRESS (0x...)</label>
-                    <input type="text" id="wallet-input" autocomplete="off" placeholder="0x1234...5678" class="w-full bg-cyber-dark/90 border border-slate-700/80 focus:border-cyber-neon focus:ring-1 focus:ring-cyber-neon rounded-2xl py-4 px-4 font-mono text-sm text-slate-100 placeholder-slate-600 outline-none transition">
-                    <p id="wallet-error" class="hidden font-rajdhani font-bold text-sm text-red-400">Invalid 42-character EVM Ethereum address format.</p>
-                </div>
-
-                <div class="flex space-x-3 pt-2">
-                    <button id="btn-step-3-back" class="w-1/3 py-4 rounded-2xl bg-cyber-dark border border-slate-800 text-slate-300 font-orbitron font-bold hover:bg-slate-800 transition">BACK</button>
-                    <button id="btn-step-3-submit" class="w-2/3 py-4 rounded-2xl bg-cyber-neon text-cyber-black font-orbitron font-black tracking-wider neon-glow-btn transition flex items-center justify-center space-x-2 text-sm">
-                        <span>CLAIM ALLOWLIST</span>
-                        <i data-lucide="sparkles" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            </section>
-
-            <!-- STEP 4: Cyber Pass Card & Theme Frames -->
-            <section id="step-4" class="hidden space-y-6 text-center">
-                <div>
-                    <span class="font-orbitron text-[10px] font-bold uppercase tracking-[0.2em] text-cyber-neon bg-cyber-neon/10 px-3 py-1 rounded-full border border-cyber-neon/30">Verified & Saved</span>
-                    <h2 class="text-2xl font-orbitron font-bold text-white mt-2">CYBERPASS GENERATED</h2>
-                </div>
-
-                <!-- Pass Customization Frame Selector Buttons -->
-                <div class="flex justify-center space-x-2 bg-cyber-dark/80 p-1.5 rounded-2xl border border-slate-800/80">
-                    <button class="frame-style-btn active text-xs font-orbitron font-bold px-3 py-2 rounded-xl bg-cyber-neon text-black transition" data-frame="frame-neon">CYBER NEON</button>
-                    <button class="frame-style-btn text-xs font-orbitron font-bold px-3 py-2 rounded-xl text-slate-400 hover:text-white transition" data-frame="frame-gold">VIP GOLD</button>
-                    <button class="frame-style-btn text-xs font-orbitron font-bold px-3 py-2 rounded-xl text-slate-400 hover:text-white transition" data-frame="frame-purple">VOID PURPLE</button>
-                </div>
-
-                <!-- DYNAMIC PASS CARD -->
-                <div id="pass-card" class="frame-neon rounded-3xl p-6 text-left relative overflow-hidden transition-all duration-300">
-                    
-                    <!-- Header -->
-                    <div class="flex justify-between items-start border-b border-white/10 pb-4">
-                        <div>
-                            <p class="font-orbitron text-[9px] tracking-widest text-cyber-neon font-bold uppercase">OFFICIAL PASS</p>
-                            <h3 id="card-project-title" class="font-orbitron font-black text-2xl text-white tracking-wider">CYBERPASS</h3>
-                        </div>
-                        <span class="font-orbitron text-[9px] border border-cyber-neon/50 bg-cyber-neon/10 text-cyber-neon px-2.5 py-1 rounded-lg font-bold">
-                            VERIFIED BROKER
-                        </span>
-                    </div>
-
-                    <!-- Avatar Box with Smart Fallback Logo Badge -->
-                    <div class="flex items-center space-x-4 my-5">
-                        <div class="relative">
-                            <!-- Main Project Logo Box -->
-                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyber-purple via-cyber-pink to-cyber-neon p-0.5 shadow-xl flex items-center justify-center">
-                                <div class="w-full h-full bg-cyber-black rounded-[14px] flex items-center justify-center font-orbitron font-black text-xl text-cyber-neon">
-                                    CP
-                                </div>
-                            </div>
-                            <!-- User X Avatar / Fallback Website Logo Badge -->
-                            <img id="card-user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-cyber-black absolute -bottom-1 -right-1 object-cover bg-cyber-dark shadow-md">
-                        </div>
-
-                        <div>
-                            <p id="card-username" class="font-orbitron font-bold text-lg text-white">@username</p>
-                            <p class="font-rajdhani text-xs font-bold text-slate-400 tracking-wide">Guaranteed Early Access Allocation</p>
-                        </div>
-                    </div>
-
-                    <!-- Pass Details -->
-                    <div class="grid grid-cols-3 gap-2 pt-3 border-t border-white/10 font-mono">
-                        <div class="bg-black/40 p-2.5 rounded-xl border border-white/5">
-                            <p class="font-orbitron text-[8px] text-slate-400 uppercase font-bold">SPOT NO.</p>
-                            <p id="card-spot-number" class="font-orbitron text-sm font-bold text-cyber-neon mt-0.5">#----</p>
-                        </div>
-                        <div class="bg-black/40 p-2.5 rounded-xl border border-white/5">
-                            <p class="font-orbitron text-[8px] text-slate-400 uppercase font-bold">DATE</p>
-                            <p id="card-issue-date" class="font-rajdhani text-xs font-bold text-slate-200 mt-1">2026-09-01</p>
-                        </div>
-                        <div class="bg-black/40 p-2.5 rounded-xl border border-white/5 overflow-hidden">
-                            <p class="font-orbitron text-[8px] text-slate-400 uppercase font-bold">WALLETS</p>
-                            <p id="card-wallet-address" class="font-mono text-xs font-bold text-slate-200 mt-1 truncate">0x00...0000</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action Controls -->
-                <div class="space-y-3 pt-2">
-                    <div class="flex space-x-3">
-                        <button id="btn-share-x" class="w-1/2 py-4 bg-sky-500 hover:bg-sky-400 text-black font-orbitron font-bold rounded-2xl transition flex items-center justify-center space-x-2 text-xs shadow-lg">
-                            <i data-lucide="twitter" class="w-4 h-4 fill-current"></i>
-                            <span>SHARE ON X</span>
-                        </button>
-                        <button id="btn-copy-ref" class="w-1/2 py-4 bg-cyber-dark hover:bg-slate-800 text-slate-200 font-orbitron font-bold border border-slate-700 rounded-2xl transition flex items-center justify-center space-x-2 text-xs">
-                            <i data-lucide="link" class="w-4 h-4"></i>
-                            <span>COPY REF LINK</span>
-                        </button>
-                    </div>
-                    <button id="btn-download-pass" class="w-full py-3.5 bg-cyber-dark hover:bg-slate-900 text-cyber-neon border border-cyber-neon/40 font-orbitron font-bold rounded-2xl transition flex items-center justify-center space-x-2 text-xs">
-                        <i data-lucide="download" class="w-4 h-4"></i>
-                        <span>DOWNLOAD PASS IMAGE</span>
-                    </button>
-                </div>
-            </section>
-        </div>
-    </main>
-
-    <!-- Leaderboard Modal -->
-    <div id="leaderboard-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="glass-card border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
-            <div class="p-6 border-b border-slate-800 flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <i data-lucide="trophy" class="w-6 h-6 text-cyber-neon"></i>
-                    <h3 class="font-orbitron font-bold text-lg text-white">TOP 100 REFERRALS</h3>
-                </div>
-                <button id="close-leaderboard-btn" class="text-slate-400 hover:text-white transition">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
+        <div class="task-list">
+          <!-- Task 1 -->
+          <div class="task-card" id="task-card-1">
+            <div class="task-details">
+              <h4>Follow Mr.Stonk</h4>
+              <p>Follow the official Mr.Stonk account on X.</p>
             </div>
-            
-            <div class="p-6 overflow-y-auto space-y-3 flex-1">
-                <table class="w-full text-left font-rajdhani">
-                    <thead class="font-orbitron text-xs uppercase text-slate-500 border-b border-slate-800">
-                        <tr>
-                            <th class="pb-3">RANK</th>
-                            <th class="pb-3">USER</th>
-                            <th class="pb-3 text-right">INVITES</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaderboard-body" class="divide-y divide-slate-800/60 font-bold text-base">
-                        <!-- Dynamic Leaderboard Data -->
-                    </tbody>
-                </table>
-                <div id="leaderboard-loader" class="text-center py-8">
-                    <i data-lucide="loader-2" class="w-8 h-8 text-cyber-neon animate-spin mx-auto"></i>
-                </div>
+            <button class="btn-task" id="btn-task-1" onclick="handleTaskAction(1)">
+              OPEN X <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </button>
+          </div>
+
+          <!-- Task 2 -->
+          <div class="task-card" id="task-card-2">
+            <div class="task-details">
+              <h4>Like the Announcement</h4>
+              <p>Like the official Mr.Stonk announcement post.</p>
             </div>
+            <button class="btn-task" id="btn-task-2" onclick="handleTaskAction(2)">
+              OPEN X <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </button>
+          </div>
+
+          <!-- Task 3 -->
+          <div class="task-card" id="task-card-3">
+            <div class="task-details">
+              <h4>Repost the Announcement</h4>
+              <p>Repost the official Mr.Stonk announcement to help spread the launch.</p>
+            </div>
+            <button class="btn-task" id="btn-task-3" onclick="handleTaskAction(3)">
+              OPEN X <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </button>
+          </div>
         </div>
+
+        <div id="tasks-complete-banner" class="instruction-box" style="display: none; border-color: var(--accent-green); background: rgba(0, 255, 163, 0.05);">
+          <strong style="color: var(--accent-green);"><i class="fa-solid fa-circle-check"></i> Verification Complete</strong>
+          All required social actions have been marked complete. Continue to register your wallet address.
+        </div>
+
+        <button id="btn-step-2" class="btn-primary" onclick="submitStep2()" disabled>
+          CONTINUE TO WALLET <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+        <p class="input-helper" style="text-align: center;">Make sure you complete the required actions on X before marking them complete.</p>
+      </div>
+
+      <!-- STEP 3: WALLET REGISTRATION (Hidden by default) -->
+      <div id="step-3" class="flow-card" style="display: none;">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-wallet"></i> Register Your Wallet</h2>
+          <p>Enter the EVM wallet address you want associated with your Mr.Stonk allowlist entry.</p>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="wallet-address-input">EVM WALLET ADDRESS</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="wallet-address-input" 
+              class="input-field" 
+              placeholder="0x..." 
+              autocomplete="off"
+              oninput="validateWalletInput(this.value)"
+            />
+          </div>
+          <div id="wallet-helper" class="input-helper">Please enter a valid EVM wallet address beginning with 0x and containing 40 hexadecimal characters.</div>
+        </div>
+
+        <div class="instruction-box">
+          <strong><i class="fa-solid fa-shield-halved"></i> Wallet Check</strong>
+          Your wallet address will be linked to your allowlist record. Transactions or signatures are not required for registration. Please double-check your address before submitting.
+        </div>
+
+        <button id="btn-step-3" class="btn-primary" onclick="submitStep3()" disabled>
+          REGISTER FOR ALLOWLIST <i class="fa-solid fa-check"></i>
+        </button>
+      </div>
+
+      <!-- STEP 4: SUCCESS / PASS DISPLAY (Hidden by default) -->
+      <div id="step-4" class="pass-container" style="display: none;">
+        <div style="text-align: center;">
+          <div class="badge-status" style="margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-circle-check"></i> ALLOWLIST ENTRY CONFIRMED
+          </div>
+          <h2 style="font-family: var(--font-mono); font-size: 1.6rem; font-weight: 800;">YOU'RE ON THE LIST</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Your Mr.Stonk allowlist registration has been successfully recorded.</p>
+        </div>
+
+        <!-- GENERATED PASS CARD -->
+        <div class="pass-card-wrapper">
+          <div id="pass-card-node" class="pass-card">
+            <div class="pass-header">
+              <div class="pass-brand">
+                <img 
+                  src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/1.png" 
+                  alt="Mr.Stonk"
+                  onerror="this.style.display='none';"
+                />
+                <span>Mr.STONK</span>
+              </div>
+              <div class="pass-tag">ALLOWLIST PASS</div>
+            </div>
+
+            <div class="pass-user-section">
+              <img id="pass-avatar-img" src="" alt="User Avatar" class="pass-avatar" />
+              <div class="pass-user-info">
+                <div id="pass-username-txt" class="pass-username">@username</div>
+                <div class="pass-role">Mr.Stonk Early Access</div>
+              </div>
+            </div>
+
+            <div class="pass-grid">
+              <div class="pass-field">
+                <span class="pass-field-label">ENTRY NO.</span>
+                <span id="pass-entry-num" class="pass-field-value">#0000</span>
+              </div>
+              <div class="pass-field">
+                <span class="pass-field-label">REGISTERED</span>
+                <span id="pass-date" class="pass-field-value">2026-09-01</span>
+              </div>
+              <div class="pass-field" style="grid-column: span 2;">
+                <span class="pass-field-label">REGISTERED WALLET</span>
+                <span id="pass-wallet-txt" class="pass-field-value">0x0000...0000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASS ACTIONS -->
+        <div class="pass-actions" style="max-width: 440px;">
+          <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="downloadPassCard()">
+            <i class="fa-solid fa-download"></i> Download Pass
+          </button>
+          <button class="btn-primary" style="flex: 1; justify-content: center;" onclick="shareOnX()">
+            <i class="fa-brands fa-x-twitter"></i> Share on X
+          </button>
+        </div>
+
+        <!-- REFERRAL BOX -->
+        <div class="referral-box" style="max-width: 440px;">
+          <h4 style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 800;">
+            <i class="fa-solid fa-users" style="color: var(--accent-cyan);"></i> INVITE FRIENDS
+          </h4>
+          <p style="font-size: 0.825rem; color: var(--text-muted);">
+            Share your personal Mr.Stonk referral link and help others join the allowlist.
+          </p>
+          <div class="input-wrapper">
+            <input type="text" id="referral-link-input" class="input-field" readonly value="https://mrstonk.app/?ref=username" />
+          </div>
+          <button class="btn-secondary" style="justify-content: center; background: rgba(0, 240, 255, 0.1); border-color: var(--accent-cyan);" onclick="copyReferralLink()">
+            <i class="fa-solid fa-copy"></i> Copy Referral Link
+          </button>
+        </div>
+      </div>
+
     </div>
 
-    <footer class="w-full max-w-6xl px-6 py-6 text-center text-xs font-rajdhani font-semibold text-slate-600 border-t border-slate-900/80 z-20">
-        &copy; 2026 CYBERPASS PROTOCOL // ALL RIGHTS RESERVED
-    </footer>
+  </main>
 
-    <!-- Firebase Integration -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getFirestore, 
-            collection, 
-            doc, 
-            setDoc, 
-            runTransaction, 
-            query, 
-            orderBy, 
-            limit, 
-            getDocs 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  <!-- LEADERBOARD MODAL -->
+  <div id="leaderboard-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border: none; padding: 0;">
+        <h2><i class="fa-solid fa-trophy" style="color: var(--warning);"></i> REFERRAL LEADERBOARD</h2>
+        <button onclick="closeLeaderboardModal()" style="background: none; color: var(--text-muted); font-size: 1.25rem;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: -0.5rem;">Top community members by successful allowlist referrals.</p>
 
-        // CONFIG CONSTANTS
-        const FIREBASE_CONFIG = {
-            apiKey: "YOUR_FIREBASE_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+      <div style="max-height: 320px; overflow-y: auto;">
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>RANK</th>
+              <th>MEMBER</th>
+              <th>REFERRALS</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-tbody">
+            <tr>
+              <td colspan="3" style="text-align: center; color: var(--text-subtle); padding: 2rem;">Loading leaderboard...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-        const PROJECT_NAME = "CYBERPASS";
-        const PROJECT_HANDLE = "Ethereum";
-        const TWEET_ID = "1234567890";
-        const DEFAULT_SITE_LOGO = "https://unavatar.io/x/ethereum"; // Fallback Website Logo
+  <!-- FOOTER -->
+  <footer>
+    &copy; 2026 Mr.Stonk // Early Access Protocol. All rights reserved.
+  </footer>
 
-        const app = initializeApp(FIREBASE_CONFIG);
-        const db = getFirestore(app);
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="toast">
+    <i id="toast-icon" class="fa-solid fa-circle-check" style="color: var(--accent-green);"></i>
+    <span id="toast-msg">Action completed successfully</span>
+  </div>
 
-        let currentStep = 1;
-        let selectedUser = { username: '', avatarUrl: '' };
-        let verifiedTasks = { follow: false, like: false, retweet: false };
-        let userPassData = null;
-        let referrerCode = new URLSearchParams(window.location.search).get('ref') || null;
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    /* ==========================================
+       CONFIGURATION CONSTANTS
+       ========================================== */
+    const PROJECT_NAME = "Mr.Stonk";
+    const PROJECT_HANDLE = "YOUR_MR_STONK_X_HANDLE"; // Insert official X handle (without @)
+    const TWEET_ID = "YOUR_ANNOUNCEMENT_TWEET_ID";   // Insert official announcement tweet ID
+    const FALLBACK_LOGO = "https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/1.png";
 
-        lucide.createIcons();
+    /* ==========================================
+       APP STATE
+       ========================================== */
+    let state = {
+      currentStep: 1,
+      username: "",
+      referrer: "",
+      avatarUrl: "",
+      tasks: { 1: false, 2: false, 3: false },
+      wallet: "",
+      entryNumber: null,
+      registeredAt: null
+    };
 
-        // DOM References
-        const usernameInput = document.getElementById('username-input');
-        const searchSpinner = document.getElementById('search-spinner');
-        const profileSuggestion = document.getElementById('profile-suggestion');
-        const suggestedAvatar = document.getElementById('suggested-avatar');
-        const suggestedName = document.getElementById('suggested-name');
-        const btnStep1Next = document.getElementById('btn-step-1-next');
+    // On Load Initialization
+    window.addEventListener("DOMContentLoaded", () => {
+      // Parse Referral Parameter from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const refParam = urlParams.get("ref");
+      if (refParam) {
+        state.referrer = refParam.replace("@", "").trim();
+      }
+    });
 
-        const taskFollow = document.getElementById('task-follow');
-        const taskLike = document.getElementById('task-like');
-        const taskRetweet = document.getElementById('task-retweet');
-        const btnStep2Back = document.getElementById('btn-step-2-back');
-        const btnStep2Next = document.getElementById('btn-step-2-next');
+    /* ==========================================
+       STEP 1 LOGIC
+       ========================================== */
+    function handleUsernameInput(val) {
+      const cleanVal = val.replace("@", "").trim();
+      const btn = document.getElementById("btn-step-1");
+      const previewContainer = document.getElementById("profile-preview-container");
+      const previewAvatar = document.getElementById("preview-avatar");
+      const previewHandle = document.getElementById("preview-handle");
 
-        const walletInput = document.getElementById('wallet-input');
-        const walletError = document.getElementById('wallet-error');
-        const btnStep3Back = document.getElementById('btn-step-3-back');
-        const btnStep3Submit = document.getElementById('btn-step-3-submit');
+      if (cleanVal.length >= 2) {
+        state.username = cleanVal;
+        state.avatarUrl = `https://unavatar.io/twitter/${cleanVal}`;
+        
+        previewAvatar.src = state.avatarUrl;
+        previewHandle.textContent = `@${cleanVal}`;
+        previewContainer.style.display = "block";
+        btn.disabled = false;
+      } else {
+        previewContainer.style.display = "none";
+        btn.disabled = true;
+      }
+    }
 
-        const btnShareX = document.getElementById('btn-share-x');
-        const btnCopyRef = document.getElementById('btn-copy-ref');
-        const btnDownloadPass = document.getElementById('btn-download-pass');
+    function submitStep1() {
+      if (!state.username) return;
+      
+      // Update UI for Step 2
+      updateStepProgress(2);
+      document.getElementById("step-1").style.display = "none";
+      document.getElementById("step-2").style.display = "flex";
+      state.currentStep = 2;
+    }
 
-        const leaderboardModal = document.getElementById('leaderboard-modal');
-        const navLeaderboardBtn = document.getElementById('nav-leaderboard-btn');
-        const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
+    /* ==========================================
+       STEP 2 LOGIC (SOCIAL VERIFICATION)
+       ========================================== */
+    function handleTaskAction(taskId) {
+      let targetUrl = "https://x.com";
+      
+      if (taskId === 1) {
+        targetUrl = PROJECT_HANDLE !== "YOUR_MR_STONK_X_HANDLE" 
+          ? `https://x.com/intent/follow?screen_name=${PROJECT_HANDLE}` 
+          : `https://x.com`;
+      } else if (taskId === 2) {
+        targetUrl = TWEET_ID !== "YOUR_ANNOUNCEMENT_TWEET_ID" 
+          ? `https://x.com/intent/like?tweet_id=${TWEET_ID}` 
+          : `https://x.com`;
+      } else if (taskId === 3) {
+        targetUrl = TWEET_ID !== "YOUR_ANNOUNCEMENT_TWEET_ID" 
+          ? `https://x.com/intent/retweet?tweet_id=${TWEET_ID}` 
+          : `https://x.com`;
+      }
 
-        // Flow Navigation
-        function setStep(step) {
-            currentStep = step;
-            document.querySelectorAll('main section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(`step-${step}`).classList.remove('hidden');
+      window.open(targetUrl, "_blank");
 
-            const progressPercentage = ((step - 1) / 2) * 100;
-            document.getElementById('line-progress').style.width = `${progressPercentage}%`;
+      // Update Task State
+      state.tasks[taskId] = true;
+      const taskBtn = document.getElementById(`btn-task-${taskId}`);
+      const taskCard = document.getElementById(`task-card-${taskId}`);
 
-            document.querySelectorAll('.step-node').forEach(node => {
-                const nodeStep = parseInt(node.getAttribute('data-step'));
-                const circle = node.querySelector('.node-circle');
-                const label = node.querySelector('span');
+      taskBtn.className = "btn-task done";
+      taskBtn.innerHTML = `<i class="fa-solid fa-check"></i> MARKED COMPLETE`;
+      taskCard.classList.add("completed");
 
-                if (nodeStep <= step) {
-                    circle.className = "node-circle w-10 h-10 rounded-2xl bg-cyber-neon text-cyber-black font-orbitron font-black flex items-center justify-center text-base border-2 border-cyber-neon transition-all duration-300 shadow-[0_0_15px_#00ffcc]";
-                    label.className = "font-rajdhani text-xs uppercase font-bold text-cyber-neon tracking-widest";
-                } else {
-                    circle.className = "node-circle w-10 h-10 rounded-2xl bg-cyber-card text-slate-500 font-orbitron font-black flex items-center justify-center text-base border-2 border-slate-800 transition-all duration-300";
-                    label.className = "font-rajdhani text-xs uppercase font-bold text-slate-500 tracking-widest";
-                }
-            });
-        }
+      checkAllTasksStatus();
+    }
 
-        // STEP 1: Username Search
-        let debounceTimer;
-        usernameInput.addEventListener('input', (e) => {
-            clearTimeout(debounceTimer);
-            const username = e.target.value.trim().replace(/^@/, '');
-            
-            if (!username) {
-                profileSuggestion.classList.add('hidden');
-                btnStep1Next.disabled = true;
-                btnStep1Next.className = "w-full py-4 rounded-2xl bg-slate-800 text-slate-600 font-orbitron font-bold tracking-wider cursor-not-allowed transition duration-300 flex items-center justify-center space-x-2 text-sm";
-                return;
+    function checkAllTasksStatus() {
+      const allDone = state.tasks[1] && state.tasks[2] && state.tasks[3];
+      const step2Btn = document.getElementById("btn-step-2");
+      const banner = document.getElementById("tasks-complete-banner");
+
+      if (allDone) {
+        step2Btn.disabled = false;
+        banner.style.display = "block";
+      }
+    }
+
+    function submitStep2() {
+      updateStepProgress(3);
+      document.getElementById("step-2").style.display = "none";
+      document.getElementById("step-3").style.display = "flex";
+      state.currentStep = 3;
+    }
+
+    /* ==========================================
+       STEP 3 LOGIC (WALLET REGISTRATION)
+       ========================================== */
+    function validateWalletInput(val) {
+      const clean = val.trim();
+      const isValid = /^0x[a-fA-F0-9]{40}$/.test(clean);
+      const btn = document.getElementById("btn-step-3");
+      const inputEl = document.getElementById("wallet-address-input");
+      const helper = document.getElementById("wallet-helper");
+
+      if (clean.length > 0 && !isValid) {
+        inputEl.classList.add("error");
+        helper.classList.add("error-text");
+        btn.disabled = true;
+      } else if (isValid) {
+        inputEl.classList.remove("error");
+        helper.classList.remove("error-text");
+        state.wallet = clean;
+        btn.disabled = false;
+      } else {
+        inputEl.classList.remove("error");
+        helper.classList.remove("error-text");
+        btn.disabled = true;
+      }
+    }
+
+    async function submitStep3() {
+      if (!state.wallet) return;
+
+      const btn = document.getElementById("btn-step-3");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> REGISTERING ALLOWLIST ENTRY...`;
+
+      const now = new Date();
+      state.registeredAt = now.toISOString().split('T')[0];
+
+      try {
+        if (window.db && window.fsModules) {
+          const { collection, doc, setDoc, getDoc, runTransaction, increment } = window.fsModules;
+          const userDocRef = doc(window.db, "allowlist", state.username.toLowerCase());
+          
+          // Check for existing entry
+          const existingSnap = await getDoc(userDocRef);
+          if (existingSnap.exists()) {
+            showToast("Username already registered on allowlist.", true);
+            btn.disabled = false;
+            btn.innerHTML = `REGISTER FOR ALLOWLIST <i class="fa-solid fa-check"></i>`;
+            return;
+          }
+
+          // Transaction for sequential entry count & record saving
+          let entryNum = 1001;
+          const counterRef = doc(window.db, "meta", "stats");
+          
+          await runTransaction(window.db, async (transaction) => {
+            const counterSnap = await transaction.get(counterRef);
+            if (counterSnap.exists()) {
+              entryNum = (counterSnap.data().totalEntries || 1000) + 1;
+              transaction.update(counterRef, { totalEntries: increment(1) });
+            } else {
+              transaction.set(counterRef, { totalEntries: entryNum });
             }
 
-            searchSpinner.classList.remove('hidden');
-
-            debounceTimer = setTimeout(() => {
-                const avatarUrl = `https://unavatar.io/x/${username}`;
-                suggestedAvatar.src = avatarUrl;
-                suggestedName.textContent = `@${username}`;
-                
-                // Smart Profile Logo Fallback Strategy
-                suggestedAvatar.onerror = () => {
-                    suggestedAvatar.src = DEFAULT_SITE_LOGO;
-                    selectedUser.avatarUrl = DEFAULT_SITE_LOGO;
-                };
-
-                searchSpinner.classList.add('hidden');
-                profileSuggestion.classList.remove('hidden');
-                selectedUser = { username, avatarUrl };
-            }, 400);
-        });
-
-        profileSuggestion.addEventListener('click', () => {
-            usernameInput.value = selectedUser.username;
-            profileSuggestion.classList.add('hidden');
-            btnStep1Next.disabled = false;
-            btnStep1Next.className = "w-full py-4 rounded-2xl bg-cyber-neon text-cyber-black font-orbitron font-black tracking-wider neon-glow-btn transition duration-300 flex items-center justify-center space-x-2 text-sm";
-        });
-
-        btnStep1Next.addEventListener('click', () => setStep(2));
-
-        // STEP 2: Task Intention Verification
-        function setupTask(buttonEl, intentUrl, taskKey) {
-            buttonEl.addEventListener('click', () => {
-                window.open(intentUrl, '_blank');
-                verifiedTasks[taskKey] = true;
-
-                const badge = buttonEl.querySelector('.status-badge');
-                badge.className = "status-badge font-orbitron text-xs px-4 py-2 rounded-xl bg-cyber-neon/10 text-cyber-neon font-bold border border-cyber-neon/50 flex items-center space-x-1";
-                badge.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>VERIFIED</span>`;
-                lucide.createIcons();
-
-                if (verifiedTasks.follow && verifiedTasks.like && verifiedTasks.retweet) {
-                    btnStep2Next.disabled = false;
-                    btnStep2Next.className = "w-2/3 py-4 rounded-2xl bg-cyber-neon text-cyber-black font-orbitron font-black tracking-wider neon-glow-btn transition flex items-center justify-center space-x-2 text-sm";
-                }
+            transaction.set(userDocRef, {
+              username: state.username,
+              wallet: state.wallet,
+              referrer: state.referrer || null,
+              entryNumber: entryNum,
+              referralCount: 0,
+              createdAt: new Date()
             });
-        }
 
-        setupTask(taskFollow, `https://x.com/intent/follow?screen_name=${PROJECT_HANDLE}`, 'follow');
-        setupTask(taskLike, `https://x.com/intent/like?tweet_id=${TWEET_ID}`, 'like');
-        setupTask(taskRetweet, `https://x.com/intent/retweet?tweet_id=${TWEET_ID}`, 'retweet');
-
-        btnStep2Back.addEventListener('click', () => setStep(1));
-        btnStep2Next.addEventListener('click', () => setStep(3));
-
-        // STEP 3: EVM Validation & Submit
-        btnStep3Back.addEventListener('click', () => setStep(2));
-
-        function isValidEVM(address) {
-            return /^0x[a-fA-F0-9]{40}$/.test(address);
-        }
-
-        btnStep3Submit.addEventListener('click', async () => {
-            const address = walletInput.value.trim();
-            if (!isValidEVM(address)) {
-                walletError.classList.remove('hidden');
-                return;
+            // Increment referrer stats if exists
+            if (state.referrer) {
+              const refDocRef = doc(window.db, "allowlist", state.referrer.toLowerCase());
+              const refSnap = await transaction.get(refDocRef);
+              if (refSnap.exists()) {
+                transaction.update(refDocRef, { referralCount: increment(1) });
+              }
             }
-            walletError.classList.add('hidden');
+          });
 
-            btnStep3Submit.disabled = true;
-            btnStep3Submit.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto"></i>`;
-            lucide.createIcons();
-
-            try {
-                const userDocRef = doc(db, "allowlist", selectedUser.username.toLowerCase());
-                const counterDocRef = doc(db, "metadata", "stats");
-
-                let passSpotNumber = 1000;
-
-                await runTransaction(db, async (transaction) => {
-                    const userDoc = await transaction.get(userDocRef);
-                    if (userDoc.exists()) {
-                        userPassData = userDoc.data();
-                        return;
-                    }
-
-                    const counterDoc = await transaction.get(counterDocRef);
-                    let totalCount = counterDoc.exists() ? counterDoc.data().totalSignups || 0 : 0;
-                    totalCount += 1;
-                    passSpotNumber = 1000 + totalCount;
-
-                    if (referrerCode && referrerCode.toLowerCase() !== selectedUser.username.toLowerCase()) {
-                        const referrerRef = doc(db, "allowlist", referrerCode.toLowerCase());
-                        const referrerDoc = await transaction.get(referrerRef);
-                        if (referrerDoc.exists()) {
-                            transaction.update(referrerRef, {
-                                referrals: (referrerDoc.data().referrals || 0) + 1
-                            });
-                        }
-                    }
-
-                    userPassData = {
-                        username: selectedUser.username,
-                        avatarUrl: selectedUser.avatarUrl || DEFAULT_SITE_LOGO,
-                        walletAddress: address,
-                        spotNumber: passSpotNumber,
-                        timestamp: new Date().toISOString(),
-                        referrals: 0
-                    };
-
-                    transaction.set(userDocRef, userPassData);
-                    transaction.set(counterDocRef, { totalSignups: totalCount }, { merge: true });
-                });
-
-                renderPassCard(userPassData);
-                setStep(4);
-                
-                confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-
-            } catch (err) {
-                console.error("Firebase Execution Error:", err);
-                showToast("System error. Please verify Firebase configuration.");
-                btnStep3Submit.disabled = false;
-                btnStep3Submit.innerHTML = `<span>CLAIM ALLOWLIST</span><i data-lucide="sparkles" class="w-4 h-4"></i>`;
-                lucide.createIcons();
-            }
-        });
-
-        // STEP 4: Render Pass & Theme Switcher
-        function renderPassCard(data) {
-            document.getElementById('card-project-title').textContent = PROJECT_NAME;
-            document.getElementById('card-username').textContent = `@${data.username}`;
-            
-            const cardAvatar = document.getElementById('card-user-avatar');
-            cardAvatar.src = data.avatarUrl;
-            cardAvatar.onerror = () => { cardAvatar.src = DEFAULT_SITE_LOGO; };
-
-            document.getElementById('card-spot-number').textContent = `#${data.spotNumber}`;
-            document.getElementById('card-issue-date').textContent = new Date(data.timestamp).toISOString().split('T')[0];
-            document.getElementById('card-wallet-address').textContent = `${data.walletAddress.substring(0, 4)}...${data.walletAddress.substring(38)}`;
+          state.entryNumber = entryNum;
+        } else {
+          // Fallback local mode
+          state.entryNumber = Math.floor(1000 + Math.random() * 9000);
         }
 
-        // Frame Theme Selector Event Listeners
-        document.querySelectorAll('.frame-style-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.frame-style-btn').forEach(b => {
-                    b.classList.remove('bg-cyber-neon', 'text-black', 'active');
-                    b.classList.add('text-slate-400');
-                });
-                
-                e.target.classList.add('bg-cyber-neon', 'text-black', 'active');
-                e.target.classList.remove('text-slate-400');
+        // Render Success Pass
+        renderPassScreen();
 
-                const targetFrame = e.target.getAttribute('data-frame');
-                const passCard = document.getElementById('pass-card');
-                passCard.className = `${targetFrame} rounded-3xl p-6 text-left relative overflow-hidden transition-all duration-300`;
-            });
+      } catch (err) {
+        console.error("Firestore Registration Error:", err);
+        showToast("Something went wrong saving registration. Please try again.", true);
+        btn.disabled = false;
+        btn.innerHTML = `REGISTER FOR ALLOWLIST <i class="fa-solid fa-check"></i>`;
+      }
+    }
+
+    /* ==========================================
+       PASS SCREEN & SUCCESS (STEP 4)
+       ========================================== */
+    function renderPassScreen() {
+      document.getElementById("step-3").style.display = "none";
+      document.getElementById("step-4").style.display = "flex";
+      
+      // Complete step indicator
+      document.querySelectorAll(".step-item").forEach(el => el.classList.add("completed"));
+
+      // Populate Pass Card Data
+      document.getElementById("pass-avatar-img").src = state.avatarUrl;
+      document.getElementById("pass-username-txt").textContent = `@${state.username}`;
+      document.getElementById("pass-entry-num").textContent = `#${state.entryNumber || '1001'}`;
+      document.getElementById("pass-date").textContent = state.registeredAt;
+      
+      const shortWallet = `${state.wallet.substring(0, 6)}...${state.wallet.substring(state.wallet.length - 4)}`;
+      document.getElementById("pass-wallet-txt").textContent = shortWallet;
+
+      // Populate Referral Link
+      const refLink = `${window.location.origin}${window.location.pathname}?ref=${state.username}`;
+      document.getElementById("referral-link-input").value = refLink;
+
+      // Trigger Confetti
+      if (window.confetti) {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#00ff22', '#00f0ff', '#ffffff']
         });
+      }
+    }
 
-        btnShareX.addEventListener('click', () => {
-            const refLink = `${window.location.origin}${window.location.pathname}?ref=${userPassData.username}`;
-            const tweetText = encodeURIComponent(`Just claimed my Early Allowlist Pass #${userPassData.spotNumber} for ${PROJECT_NAME}!\n\nSecure your access pass here: ${refLink}`);
-            window.open(`https://x.com/intent/tweet?text=${tweetText}`, '_blank');
-        });
-
-        btnCopyRef.addEventListener('click', () => {
-            const refLink = `${window.location.origin}${window.location.pathname}?ref=${userPassData.username}`;
-            navigator.clipboard.writeText(refLink).then(() => showToast("Referral link copied to clipboard!"));
-        });
-
-        btnDownloadPass.addEventListener('click', () => {
-            const passElement = document.getElementById('pass-card');
-            html2canvas(passElement, { backgroundColor: null, scale: 2 }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `${userPassData.username}-cyberpass.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            });
-        });
-
-        // Leaderboard Fetching
-        async function fetchLeaderboard() {
-            const leaderboardBody = document.getElementById('leaderboard-body');
-            const leaderboardLoader = document.getElementById('leaderboard-loader');
-            leaderboardBody.innerHTML = '';
-            leaderboardLoader.classList.remove('hidden');
-
-            try {
-                const q = query(collection(db, "allowlist"), orderBy("referrals", "desc"), limit(100));
-                const snapshot = await getDocs(q);
-                leaderboardLoader.classList.add('hidden');
-
-                if (snapshot.empty) {
-                    leaderboardBody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-slate-500 font-rajdhani">No referral records logged yet.</td></tr>`;
-                    return;
-                }
-
-                let rank = 1;
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-900/60 transition";
-                    row.innerHTML = `
-                        <td class="py-3.5 font-orbitron font-bold ${rank <= 3 ? 'text-cyber-neon' : 'text-slate-500'}">#${rank}</td>
-                        <td class="py-3.5 flex items-center space-x-3">
-                            <img src="${data.avatarUrl}" onerror="this.src='${DEFAULT_SITE_LOGO}'" class="w-7 h-7 rounded-full object-cover border border-slate-700">
-                            <span class="text-slate-200 font-bold">@${data.username}</span>
-                        </td>
-                        <td class="py-3.5 text-right font-orbitron font-bold text-cyber-neon">${data.referrals || 0}</td>
-                    `;
-                    leaderboardBody.appendChild(row);
-                    rank++;
-                });
-            } catch (err) {
-                console.error(err);
-                leaderboardLoader.classList.add('hidden');
-            }
+    /* ==========================================
+       UTILITY & SOCIAL ACTIONS
+       ========================================== */
+    function updateStepProgress(activeStep) {
+      for (let i = 1; i <= 3; i++) {
+        const el = document.getElementById(`step-indicator-${i}`);
+        if (i < activeStep) {
+          el.className = "step-item completed";
+        } else if (i === activeStep) {
+          el.className = "step-item active";
+        } else {
+          el.className = "step-item";
         }
+      }
+    }
 
-        navLeaderboardBtn.addEventListener('click', () => {
-            leaderboardModal.classList.remove('hidden');
-            fetchLeaderboard();
-        });
+    function copyReferralLink() {
+      const input = document.getElementById("referral-link-input");
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      showToast("Referral link copied to clipboard.");
+    }
 
-        closeLeaderboardBtn.addEventListener('click', () => leaderboardModal.classList.add('hidden'));
+    function shareOnX() {
+      const refLink = document.getElementById("referral-link-input").value;
+      const text = encodeURIComponent(
+        `Just secured my ${PROJECT_NAME} early access allowlist entry (#${state.entryNumber}).\n\nJoin the allowlist:`
+      );
+      const url = `https://x.com/intent/tweet?text=${text}&url=${encodeURIComponent(refLink)}`;
+      window.open(url, "_blank");
+    }
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-message').textContent = msg;
-            toast.classList.remove('translate-y-[-100px]', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-[-100px]', 'opacity-0');
-            }, 3000);
+    function downloadPassCard() {
+      const passNode = document.getElementById("pass-card-node");
+      if (!window.html2canvas) return;
+
+      html2canvas(passNode, {
+        backgroundColor: "#07090e",
+        scale: 2
+      }).then(canvas => {
+        const link = document.createElement("a");
+        link.download = `MrStonk-Pass-${state.username}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        showToast("Pass downloaded successfully.");
+      });
+    }
+
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById("toast");
+      const icon = document.getElementById("toast-icon");
+      const msgEl = document.getElementById("toast-msg");
+
+      msgEl.textContent = msg;
+      icon.className = isError ? "fa-solid fa-triangle-exclamation" : "fa-solid fa-circle-check";
+      icon.style.color = isError ? "var(--danger)" : "var(--accent-green)";
+
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3500);
+    }
+
+    /* ==========================================
+       LEADERBOARD MODAL LOGIC
+       ========================================== */
+    async function openLeaderboardModal() {
+      const modal = document.getElementById("leaderboard-modal");
+      modal.classList.add("open");
+      
+      const tbody = document.getElementById("leaderboard-tbody");
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-subtle); padding: 2rem;">Loading leaderboard...</td></tr>`;
+
+      try {
+        if (window.db && window.fsModules) {
+          const { collection, getDocs, query, orderBy, limit } = window.fsModules;
+          const q = query(collection(window.db, "allowlist"), orderBy("referralCount", "desc"), limit(10));
+          const snap = await getDocs(q);
+
+          if (snap.empty) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-subtle); padding: 2rem;">No referral activity yet.</td></tr>`;
+            return;
+          }
+
+          let html = "";
+          let rank = 1;
+          snap.forEach(docSnap => {
+            const data = docSnap.data();
+            const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+            html += `
+              <tr>
+                <td class="rank-cell ${rankClass}">#${rank}</td>
+                <td>@${data.username}</td>
+                <td><strong>${data.referralCount || 0}</strong></td>
+              </tr>
+            `;
+            rank++;
+          });
+          tbody.innerHTML = html;
+        } else {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-subtle); padding: 2rem;">Connect Firebase to view live leaderboard.</td></tr>`;
         }
-    </script>
+      } catch (err) {
+        console.error("Leaderboard Error:", err);
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--danger); padding: 2rem;">Failed to load leaderboard.</td></tr>`;
+      }
+    }
+
+    function closeLeaderboardModal() {
+      document.getElementById("leaderboard-modal").classList.remove("open");
+    }
+  </script>
 </body>
 </html>
