@@ -215,6 +215,75 @@
     }
 
     /* ==========================================
+       MINING MACHINES INFINITE MARQUEE SLIDER
+       ========================================== */
+    .marquee-wrapper {
+      width: 100%;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.3);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 0;
+      position: relative;
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: 1.25rem;
+      width: max-content;
+      animation: marqueeScroll 35s linear infinite;
+    }
+
+    .marquee-wrapper:hover .marquee-track {
+      animation-play-state: paused;
+    }
+
+    @keyframes marqueeScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .machine-card {
+      width: 200px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .machine-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-green);
+    }
+
+    .machine-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background: #000;
+    }
+
+    .machine-info {
+      padding: 0.75rem;
+      text-align: center;
+    }
+
+    .machine-title {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #fff;
+    }
+
+    .machine-subtitle {
+      font-size: 0.7rem;
+      color: var(--accent-green);
+      margin-top: 0.25rem;
+      font-family: var(--font-mono);
+    }
+
+    /* ==========================================
        MAIN LAYOUT & CONTAINER
        ========================================== */
     main {
@@ -628,7 +697,6 @@
       text-align: left;
     }
 
-    /* Ambient Banner Glows */
     .pass-card::before {
       content: "";
       position: absolute;
@@ -920,7 +988,7 @@
   <header>
     <div class="brand-container">
       <img 
-        src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/2.png" 
+        src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/icon.png" 
         alt="Mr.Stonk Logo" 
         class="brand-logo"
         onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
@@ -935,6 +1003,13 @@
       </button>
     </div>
   </header>
+
+  <!-- MINING MACHINES CAROUSEL SLIDER -->
+  <div class="marquee-wrapper">
+    <div class="marquee-track" id="marquee-track">
+      <!-- Generated Dynamically via JS (Duplicated for seamless infinite loop) -->
+    </div>
+  </div>
 
   <!-- MAIN CONTAINER -->
   <main>
@@ -1122,7 +1197,7 @@
             <div class="pass-header">
               <div class="pass-brand">
                 <img 
-                  src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/1.png" 
+                  src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/icon.png" 
                   alt="Mr.Stonk Logo"
                   onerror="this.style.display='none';"
                   crossorigin="anonymous"
@@ -1178,7 +1253,7 @@
             Share your personal Mr.Stonk referral link and help others join the allowlist.
           </p>
           <div class="input-wrapper">
-            <input type="text" id="referral-link-input" class="input-field" readonly value="https://mrstonk.app/?ref=username" />
+            <input type="text" id="referral-link-input" class="input-field" readonly value="https://www.mrstonk.work/?ref=username" />
           </div>
           <button class="btn-secondary" style="justify-content: center; background: rgba(0, 240, 255, 0.1); border-color: var(--accent-cyan);" onclick="copyReferralLink()">
             <i class="fa-solid fa-copy"></i> Copy Referral Link
@@ -1237,7 +1312,7 @@
     const PROJECT_NAME = "Mr.Stonk";
     const PROJECT_HANDLE = "0xMrStonk"; 
     const TWEET_ID = "2093023734089072951";
-    const FALLBACK_LOGO = "https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/1.png";
+    const DOMAIN_URL = "https://www.mrstonk.work/";
 
     /* ==========================================
        APP STATE
@@ -1253,8 +1328,38 @@
       registeredAt: null
     };
 
+    // Render Infinite Marquee Machine Cards
+    function renderMiningMachinesMarquee() {
+      const track = document.getElementById("marquee-track");
+      if (!track) return;
+
+      const baseAssets = [];
+      for (let i = 1; i <= 10; i++) {
+        baseAssets.push({
+          img: `https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/${i}.png`,
+          title: "Mining Machine",
+          sub: "4,444 Unique Machines"
+        });
+      }
+
+      // Repeat list twice for seamless CSS animation
+      const fullList = [...baseAssets, ...baseAssets];
+
+      track.innerHTML = fullList.map(item => `
+        <div class="machine-card">
+          <img src="${item.img}" alt="${item.title}" class="machine-img" loading="lazy" />
+          <div class="machine-info">
+            <div class="machine-title">${item.title}</div>
+            <div class="machine-subtitle">${item.sub}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
     // On Load Initialization
     window.addEventListener("DOMContentLoaded", () => {
+      renderMiningMachinesMarquee();
+
       // Parse Referral Parameter from URL
       const urlParams = new URLSearchParams(window.location.search);
       const refParam = urlParams.get("ref");
@@ -1304,13 +1409,10 @@
       let targetUrl = "https://x.com";
       
       if (taskId === 1) {
-        // Direct Follow Link
         targetUrl = `https://x.com/intent/follow?screen_name=${PROJECT_HANDLE}`;
       } else if (taskId === 2) {
-        // Direct Like Link
         targetUrl = `https://x.com/intent/like?tweet_id=${TWEET_ID}`;
       } else if (taskId === 3) {
-        // Direct Retweet Link
         targetUrl = `https://x.com/intent/retweet?tweet_id=${TWEET_ID}`;
       }
 
@@ -1465,7 +1567,7 @@
       document.getElementById("pass-wallet-txt").textContent = shortWallet;
 
       // Populate Referral Link
-      const refLink = `${window.location.origin}${window.location.pathname}?ref=${state.username}`;
+      const refLink = `${DOMAIN_URL}?ref=${state.username}`;
       document.getElementById("referral-link-input").value = refLink;
 
       // Trigger Celebration Confetti
