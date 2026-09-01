@@ -588,12 +588,11 @@
     }
 
     .profile-avatar {
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       object-fit: cover;
-      border: 2px solid var(--accent-green);
-      background: #000;
+      border: 1px solid var(--accent-green);
     }
 
     .profile-meta .profile-handle {
@@ -793,7 +792,6 @@
       border: 2px solid var(--accent-green);
       object-fit: cover;
       box-shadow: 0 0 15px var(--accent-green-glow);
-      background: #000;
     }
 
     .pass-user-info .pass-username {
@@ -1440,36 +1438,102 @@
     const DOMAIN_URL = "https://www.mrstonk.work/";
 
     /* ==========================================
-       OPTIMIZED AVATAR URL HELPER (X PROFILE PICTURE)
+       AVATAR RESOLUTION (X PROFILE PICTURE)
+       Layered resolver so the picture loads reliably:
+         1) Optional first-party backend endpoint — set
+            window.AVATAR_API_ENDPOINT to point at your own
+            server-side resolver (e.g. a Cloud Function that
+            calls the official X API with a secret bearer
+            token) returning JSON: { "profile_image_url": "..." }.
+            This is the most reliable source since it isn't
+            subject to a public proxy's rate limits. Unset by
+            default — see resolveAvatar.function.js for a
+            ready-to-deploy example.
+         2) unavatar.io's current /x/ endpoint (their old
+            /twitter/ path is deprecated and no longer resolves).
+         3) A generated fallback avatar if neither source can
+            be resolved, so the UI never shows a broken image.
+       Every resolution is verified via a real Image() load
+       before it's applied, and a per-element request token
+       guards against a stale (slow) response overwriting a
+       newer one while the user is still typing.
        ========================================== */
+    const avatarRequestTokens = new WeakMap();
+
     function buildAvatarUrl(username) {
-      const clean = (username || "").replace(/[^a-zA-Z0-9_]/g, "").trim();
-      if (!clean) return buildAvatarFallbackUrl("?");
-      // twivatar.glitch.me directly proxies Twitter profile images without CORS issues
-      return `https://twivatar.glitch.me/${clean}`;
+      const clean = (username || "").replace("@", "").trim();
+      const fallback = encodeURIComponent(buildAvatarFallbackUrl(clean));
+      return `https://unavatar.io/x/${clean}?fallback=${fallback}`;
     }
 
     function buildAvatarFallbackUrl(username) {
-      const clean = (username || "?").replace(/[^a-zA-Z0-9_]/g, "").trim();
-      return `https://ui-avatars.com/api/?name=${encodeURIComponent(clean)}&background=0D1119&color=00FF22&bold=true`;
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(username || "?")}&background=0D1119&color=00FF22&bold=true`;
     }
 
     function attachAvatarFallback(imgEl, username) {
-      const clean = (username || "").replace(/[^a-zA-Z0-9_]/g, "").trim();
       imgEl.onerror = function () {
-        this.onerror = function() {
-          this.onerror = null;
-          this.src = buildAvatarFallbackUrl(clean);
-        };
-        // Secondary fallback via unavatar
-        this.src = `https://unavatar.io/x/${clean}`;
+        this.onerror = null;
+        this.src = buildAvatarFallbackUrl(username);
       };
     }
 
+    // Inline-safe version for template-string generated <img onerror="..."> tags
     function handleAvatarError(imgEl, username) {
-      const clean = (username || "").replace(/[^a-zA-Z0-9_]/g, "").trim();
       imgEl.onerror = null;
-      imgEl.src = buildAvatarFallbackUrl(clean);
+      imgEl.src = buildAvatarFallbackUrl(username);
+    }
+
+    // Resolves the real X profile photo for `username` and applies it to `imgEl`,
+    // trying the optional backend endpoint first, then the public resolver, and
+    // always landing on a generated fallback rather than a broken image.
+    function resolveAvatarInto(imgEl, username) {
+      const clean = (username || "").replace("@", "").trim();
+      if (!imgEl || !clean) return;
+
+      const myToken = (avatarRequestTokens.get(imgEl) || 0) + 1;
+      avatarRequestTokens.set(imgEl, myToken);
+
+      const isCurrent = () => avatarRequestTokens.get(imgEl) === myToken;
+
+      // Verify a candidate URL actually loads before committing it to the visible <img>.
+      const applyIfLoadable = (url, onFail) => {
+        if (!isCurrent()) return;
+        const probe = new Image();
+        probe.onload = () => {
+          if (!isCurrent()) return;
+          imgEl.onerror = null;
+          imgEl.src = url;
+        };
+        probe.onerror = () => {
+          if (!isCurrent()) return;
+          if (onFail) onFail();
+          else {
+            imgEl.onerror = null;
+            imgEl.src = buildAvatarFallbackUrl(clean);
+          }
+        };
+        probe.src = url;
+      };
+
+      const usePublicResolver = () => applyIfLoadable(buildAvatarUrl(clean));
+
+      if (window.AVATAR_API_ENDPOINT) {
+        fetch(`${window.AVATAR_API_ENDPOINT}?username=${encodeURIComponent(clean)}`)
+          .then(res => (res.ok ? res.json() : Promise.reject(res.status)))
+          .then(data => {
+            if (!isCurrent()) return;
+            if (data && data.profile_image_url) {
+              applyIfLoadable(data.profile_image_url, usePublicResolver);
+            } else {
+              usePublicResolver();
+            }
+          })
+          .catch(() => {
+            if (isCurrent()) usePublicResolver();
+          });
+      } else {
+        usePublicResolver();
+      }
     }
 
     /* ==========================================
@@ -1486,7 +1550,7 @@
       registeredAt: null
     };
 
-    // Render NFT Gallery Grid
+    // Render NFT Gallery Grid (numbered only, no names)
     function renderGallery() {
       const grid = document.getElementById("gallery-grid");
       if (!grid) return;
@@ -1505,7 +1569,7 @@
       grid.innerHTML = html;
     }
 
-    // Open Gallery Lightbox
+    // Open Gallery Lightbox (Enlarged NFT View)
     function openGalleryLightbox(imgUrl, label) {
       document.getElementById("lightbox-img").src = imgUrl;
       document.getElementById("lightbox-img").alt = label;
@@ -1525,34 +1589,37 @@
       const urlParams = new URLSearchParams(window.location.search);
       const refParam = urlParams.get("ref");
       if (refParam) {
-        state.referrer = refParam.replace(/[^a-zA-Z0-9_]/g, "").trim();
+        state.referrer = refParam.replace("@", "").trim();
       }
     });
 
     /* ==========================================
        STEP 1 LOGIC
        ========================================== */
-    let typingTimer;
+    let usernameAvatarDebounce = null;
+
     function handleUsernameInput(val) {
-      clearTimeout(typingTimer);
-      const cleanVal = val.replace(/[^a-zA-Z0-9_]/g, "").trim();
+      const cleanVal = val.replace("@", "").trim();
       const btn = document.getElementById("btn-step-1");
       const previewContainer = document.getElementById("profile-preview-container");
       const previewAvatar = document.getElementById("preview-avatar");
       const previewHandle = document.getElementById("preview-handle");
 
       if (cleanVal.length >= 2) {
-        typingTimer = setTimeout(() => {
-          state.username = cleanVal;
+        state.username = cleanVal;
+        previewHandle.textContent = `@${cleanVal}`;
+        previewContainer.style.display = "block";
+        btn.disabled = false;
+
+        // Debounce the actual avatar lookup so rapid typing doesn't fire
+        // a request per keystroke — only resolve once typing pauses.
+        clearTimeout(usernameAvatarDebounce);
+        usernameAvatarDebounce = setTimeout(() => {
           state.avatarUrl = buildAvatarUrl(cleanVal);
-          
-          attachAvatarFallback(previewAvatar, cleanVal);
-          previewAvatar.src = state.avatarUrl;
-          previewHandle.textContent = `@${cleanVal}`;
-          previewContainer.style.display = "block";
-          btn.disabled = false;
-        }, 300);
+          resolveAvatarInto(previewAvatar, cleanVal);
+        }, 450);
       } else {
+        clearTimeout(usernameAvatarDebounce);
         previewContainer.style.display = "none";
         btn.disabled = true;
       }
@@ -1726,8 +1793,7 @@
 
       // Populate Pass Banner Card Data
       const passAvatarImg = document.getElementById("pass-avatar-img");
-      attachAvatarFallback(passAvatarImg, state.username);
-      passAvatarImg.src = state.avatarUrl || buildAvatarUrl(state.username);
+      resolveAvatarInto(passAvatarImg, state.username);
       document.getElementById("pass-username-txt").textContent = `@${state.username}`;
       document.getElementById("pass-entry-num").textContent = `#${state.entryNumber || '1001'}`;
       document.getElementById("pass-date").textContent = state.registeredAt;
