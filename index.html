@@ -35,18 +35,18 @@
 
     // Firebase Config Placeholder (Insert actual credentials for deployment)
     const firebaseConfig = {
-      apiKey: "YOUR_FIREBASE_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyCVDNtfeHmyeiLevNkWaAOIQs3dF1Yx6Rk",
+      authDomain: "kick-a9ee1.firebaseapp.com",
+      projectId: "kick-a9ee1",
+      storageBucket: "kick-a9ee1.firebasestorage.app",
+      messagingSenderId: "613337178500",
+      appId: "1:613337178500:web:015277a7b8eec0230b7dd1"
     };
 
     // Initialize Firebase safely
     let db = null;
     try {
-      if (firebaseConfig.apiKey !== "YOUR_FIREBASE_API_KEY") {
+      if (firebaseConfig.apiKey !== "AIzaSyCVDNtfeHmyeiLevNkWaAOIQs3dF1Yx6Rk") {
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
       } else {
