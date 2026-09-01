@@ -5,16 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mr.Stonk // Early Access Allowlist</title>
 
+  <!-- External Environment Config File Loader -->
   <script src="./env.js"></script>
 
+  <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+  <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+  <!-- Firebase Modular Web SDK (v10) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { 
@@ -584,11 +588,12 @@
     }
 
     .profile-avatar {
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       object-fit: cover;
-      border: 1px solid var(--accent-green);
+      border: 2px solid var(--accent-green);
+      background: #000;
     }
 
     .profile-meta .profile-handle {
@@ -788,6 +793,7 @@
       border: 2px solid var(--accent-green);
       object-fit: cover;
       box-shadow: 0 0 15px var(--accent-green-glow);
+      background: #000;
     }
 
     .pass-user-info .pass-username {
@@ -1076,6 +1082,7 @@
 </head>
 <body>
 
+  <!-- HEADER -->
   <header>
     <div class="brand-container">
       <img 
@@ -1095,6 +1102,7 @@
     </div>
   </header>
 
+  <!-- PROJECT LOGO SHOWCASE -->
   <div class="logo-showcase">
     <div class="logo-showcase-card">
       <img
@@ -1104,8 +1112,10 @@
     </div>
   </div>
 
+  <!-- MAIN CONTAINER -->
   <main>
 
+    <!-- HERO SECTION -->
     <section class="hero-section">
       <div class="badge-status">
         <span class="pulse-dot"></span>
@@ -1117,6 +1127,7 @@
       </p>
     </section>
 
+    <!-- STEP PROGRESS INDICATOR -->
     <div class="step-progress-container">
       <div class="step-item active" id="step-indicator-1">
         <div class="step-num">01</div>
@@ -1132,8 +1143,10 @@
       </div>
     </div>
 
+    <!-- FLOW CONTAINER -->
     <div id="flow-content">
 
+      <!-- STEP 1: IDENTITY -->
       <div id="step-1" class="flow-card">
         <div class="card-header">
           <h2><i class="fa-brands fa-x-twitter"></i> Verify Your Identity</h2>
@@ -1155,6 +1168,7 @@
           <div id="username-helper" class="input-helper">Enter your username without the @ symbol.</div>
         </div>
 
+        <!-- PROFILE PREVIEW (Hidden by default) -->
         <div id="profile-preview-container" style="display: none;">
           <div class="profile-preview-card">
             <div class="profile-info">
@@ -1174,6 +1188,7 @@
         <p class="input-helper" style="text-align: center;">Your X username is used solely to identify your allowlist registration record.</p>
       </div>
 
+      <!-- STEP 2: SOCIAL VERIFICATION (Hidden by default) -->
       <div id="step-2" class="flow-card" style="display: none;">
         <div class="card-header">
           <h2><i class="fa-solid fa-user-check"></i> Complete Verification</h2>
@@ -1189,6 +1204,7 @@
         </div>
 
         <div class="task-list">
+          <!-- Task 1: Follow -->
           <div class="task-card" id="task-card-1">
             <div class="task-details">
               <h4>Follow Mr.Stonk</h4>
@@ -1199,6 +1215,7 @@
             </button>
           </div>
 
+          <!-- Task 2: Like -->
           <div class="task-card" id="task-card-2">
             <div class="task-details">
               <h4>Like the Announcement</h4>
@@ -1209,6 +1226,7 @@
             </button>
           </div>
 
+          <!-- Task 3: Repost -->
           <div class="task-card" id="task-card-3">
             <div class="task-details">
               <h4>Repost the Announcement</h4>
@@ -1232,15 +1250,18 @@
         <p class="input-helper" style="text-align: center;">Make sure you complete the required actions on X before marking them complete.</p>
       </div>
 
+      <!-- NFT GALLERY SECTION (Home / Step 1 only) -->
       <div id="gallery-section" class="flow-card gallery-section">
         <div class="card-header">
           <h2><i class="fa-solid fa-images"></i> Gallery</h2>
           <p>A preview of the Mr.Stonk NFT collection.</p>
         </div>
         <div class="gallery-grid" id="gallery-grid">
-          </div>
+          <!-- Generated Dynamically via JS -->
+        </div>
       </div>
 
+      <!-- STEP 3: WALLET REGISTRATION (Hidden by default) -->
       <div id="step-3" class="flow-card" style="display: none;">
         <div class="card-header">
           <h2><i class="fa-solid fa-wallet"></i> Register Your Wallet</h2>
@@ -1272,6 +1293,7 @@
         </button>
       </div>
 
+      <!-- STEP 4: SUCCESS / PASS DISPLAY & BANNER GENERATION (Hidden by default) -->
       <div id="step-4" class="pass-container" style="display: none;">
         <div style="text-align: center;">
           <div class="badge-status" style="margin-bottom: 0.5rem;">
@@ -1281,6 +1303,7 @@
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Your Mr.Stonk allowlist registration has been successfully recorded.</p>
         </div>
 
+        <!-- DYNAMIC X POST BANNER CARD -->
         <div class="pass-card-wrapper">
           <div id="pass-card-node" class="pass-card">
             <div class="pass-header">
@@ -1323,6 +1346,7 @@
           </div>
         </div>
 
+        <!-- PASS ACTIONS -->
         <div class="pass-actions" style="max-width: 540px;">
           <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="downloadPassCard()">
             <i class="fa-solid fa-download"></i> Download Banner Pass
@@ -1332,6 +1356,7 @@
           </button>
         </div>
 
+        <!-- REFERRAL BOX -->
         <div class="referral-box" style="max-width: 540px;">
           <h4 style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 800;">
             <i class="fa-solid fa-users" style="color: var(--accent-cyan);"></i> INVITE FRIENDS
@@ -1352,6 +1377,7 @@
 
   </main>
 
+  <!-- LEADERBOARD MODAL -->
   <div id="leaderboard-modal" class="modal-overlay">
     <div class="modal-content">
       <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border: none; padding: 0;">
@@ -1379,6 +1405,7 @@
     </div>
   </div>
 
+  <!-- NFT GALLERY LIGHTBOX MODAL -->
   <div id="gallery-lightbox" class="modal-overlay" onclick="if(event.target === this) closeGalleryLightbox();">
     <div class="modal-content lightbox-content">
       <div class="lightbox-card">
@@ -1391,15 +1418,18 @@
     </div>
   </div>
 
+  <!-- FOOTER -->
   <footer>
     &copy; 2026 Mr.Stonk // Early Access Protocol. All rights reserved.
   </footer>
 
+  <!-- TOAST NOTIFICATION -->
   <div id="toast" class="toast">
     <i id="toast-icon" class="fa-solid fa-circle-check" style="color: var(--accent-green);"></i>
     <span id="toast-msg">Action completed successfully</span>
   </div>
 
+  <!-- JAVASCRIPT LOGIC -->
   <script>
     /* ==========================================
        CONFIGURED X (TWITTER) CONSTANTS
@@ -1410,30 +1440,36 @@
     const DOMAIN_URL = "https://www.mrstonk.work/";
 
     /* ==========================================
-       AVATAR URL HELPER (X PROFILE PICTURE)
+       OPTIMIZED AVATAR URL HELPER (X PROFILE PICTURE)
        ========================================== */
     function buildAvatarUrl(username) {
-      const clean = (username || "").replace("@", "").trim();
+      const clean = (username || "").replace(/[^a-zA-Z0-9_]/g, "").trim();
       if (!clean) return buildAvatarFallbackUrl("?");
-      return `https://unavatar.io/twitter/${clean}?fallback=${encodeURIComponent(buildAvatarFallbackUrl(clean))}`;
+      // twivatar.glitch.me directly proxies Twitter profile images without CORS issues
+      return `https://twivatar.glitch.me/${clean}`;
     }
 
     function buildAvatarFallbackUrl(username) {
-      const clean = (username || "?").replace("@", "").trim();
+      const clean = (username || "?").replace(/[^a-zA-Z0-9_]/g, "").trim();
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(clean)}&background=0D1119&color=00FF22&bold=true`;
     }
 
     function attachAvatarFallback(imgEl, username) {
+      const clean = (username || "").replace(/[^a-zA-Z0-9_]/g, "").trim();
       imgEl.onerror = function () {
-        this.onerror = null;
-        this.src = buildAvatarFallbackUrl(username);
+        this.onerror = function() {
+          this.onerror = null;
+          this.src = buildAvatarFallbackUrl(clean);
+        };
+        // Secondary fallback via unavatar
+        this.src = `https://unavatar.io/x/${clean}`;
       };
     }
 
-    // Inline-safe version for template-string generated <img onerror="..."> tags
     function handleAvatarError(imgEl, username) {
+      const clean = (username || "").replace(/[^a-zA-Z0-9_]/g, "").trim();
       imgEl.onerror = null;
-      imgEl.src = buildAvatarFallbackUrl(username);
+      imgEl.src = buildAvatarFallbackUrl(clean);
     }
 
     /* ==========================================
@@ -1450,7 +1486,7 @@
       registeredAt: null
     };
 
-    // Render NFT Gallery Grid (numbered only, no names)
+    // Render NFT Gallery Grid
     function renderGallery() {
       const grid = document.getElementById("gallery-grid");
       if (!grid) return;
@@ -1469,7 +1505,7 @@
       grid.innerHTML = html;
     }
 
-    // Open Gallery Lightbox (Enlarged NFT View)
+    // Open Gallery Lightbox
     function openGalleryLightbox(imgUrl, label) {
       document.getElementById("lightbox-img").src = imgUrl;
       document.getElementById("lightbox-img").alt = label;
@@ -1489,29 +1525,33 @@
       const urlParams = new URLSearchParams(window.location.search);
       const refParam = urlParams.get("ref");
       if (refParam) {
-        state.referrer = refParam.replace("@", "").trim();
+        state.referrer = refParam.replace(/[^a-zA-Z0-9_]/g, "").trim();
       }
     });
 
     /* ==========================================
        STEP 1 LOGIC
        ========================================== */
+    let typingTimer;
     function handleUsernameInput(val) {
-      const cleanVal = val.replace("@", "").trim();
+      clearTimeout(typingTimer);
+      const cleanVal = val.replace(/[^a-zA-Z0-9_]/g, "").trim();
       const btn = document.getElementById("btn-step-1");
       const previewContainer = document.getElementById("profile-preview-container");
       const previewAvatar = document.getElementById("preview-avatar");
       const previewHandle = document.getElementById("preview-handle");
 
       if (cleanVal.length >= 2) {
-        state.username = cleanVal;
-        state.avatarUrl = buildAvatarUrl(cleanVal);
-        
-        attachAvatarFallback(previewAvatar, cleanVal);
-        previewAvatar.src = state.avatarUrl;
-        previewHandle.textContent = `@${cleanVal}`;
-        previewContainer.style.display = "block";
-        btn.disabled = false;
+        typingTimer = setTimeout(() => {
+          state.username = cleanVal;
+          state.avatarUrl = buildAvatarUrl(cleanVal);
+          
+          attachAvatarFallback(previewAvatar, cleanVal);
+          previewAvatar.src = state.avatarUrl;
+          previewHandle.textContent = `@${cleanVal}`;
+          previewContainer.style.display = "block";
+          btn.disabled = false;
+        }, 300);
       } else {
         previewContainer.style.display = "none";
         btn.disabled = true;
