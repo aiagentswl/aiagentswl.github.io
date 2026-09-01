@@ -992,6 +992,63 @@
       position: relative;
     }
 
+    /* Gallery Item Click Cursor */
+    .gallery-item {
+      cursor: pointer;
+    }
+
+    /* Gallery Lightbox Modal */
+    .lightbox-content {
+      background: transparent;
+      border: none;
+      padding: 0;
+      max-width: 480px;
+      align-items: center;
+    }
+
+    .lightbox-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 0 40px var(--accent-green-glow);
+      width: 100%;
+    }
+
+    .lightbox-card img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+      background: #000;
+    }
+
+    .lightbox-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+    }
+
+    .lightbox-label {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--accent-green);
+    }
+
+    .lightbox-close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
     /* Mobile Responsive Adjustments */
     @media (max-width: 640px) {
       header { padding: 1rem; }
@@ -1175,8 +1232,8 @@
         <p class="input-helper" style="text-align: center;">Make sure you complete the required actions on X before marking them complete.</p>
       </div>
 
-      <!-- NFT GALLERY SECTION -->
-      <div class="flow-card gallery-section">
+      <!-- NFT GALLERY SECTION (Home / Step 1 only) -->
+      <div id="gallery-section" class="flow-card gallery-section">
         <div class="card-header">
           <h2><i class="fa-solid fa-images"></i> Gallery</h2>
           <p>A preview of the Mr.Stonk NFT collection.</p>
@@ -1330,6 +1387,19 @@
     </div>
   </div>
 
+  <!-- NFT GALLERY LIGHTBOX MODAL -->
+  <div id="gallery-lightbox" class="modal-overlay" onclick="if(event.target === this) closeGalleryLightbox();">
+    <div class="modal-content lightbox-content">
+      <div class="lightbox-card">
+        <img id="lightbox-img" src="" alt="" />
+        <div class="lightbox-footer">
+          <span id="lightbox-label" class="lightbox-label"></span>
+          <button class="lightbox-close-btn" onclick="closeGalleryLightbox()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- FOOTER -->
   <footer>
     &copy; 2026 Mr.Stonk // Early Access Protocol. All rights reserved.
@@ -1373,14 +1443,27 @@
       let html = "";
       for (let i = 1; i <= 10; i++) {
         const num = String(i).padStart(3, "0");
+        const imgUrl = `https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/${i}.png`;
         html += `
-          <div class="gallery-item">
-            <img src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/${i}.png" alt="NFT #${num}" class="gallery-img" loading="lazy" />
+          <div class="gallery-item" onclick="openGalleryLightbox('${imgUrl}', '#${num}')">
+            <img src="${imgUrl}" alt="NFT #${num}" class="gallery-img" loading="lazy" />
             <div class="gallery-item-label">#${num}</div>
           </div>
         `;
       }
       grid.innerHTML = html;
+    }
+
+    // Open Gallery Lightbox (Enlarged NFT View)
+    function openGalleryLightbox(imgUrl, label) {
+      document.getElementById("lightbox-img").src = imgUrl;
+      document.getElementById("lightbox-img").alt = label;
+      document.getElementById("lightbox-label").textContent = label;
+      document.getElementById("gallery-lightbox").classList.add("open");
+    }
+
+    function closeGalleryLightbox() {
+      document.getElementById("gallery-lightbox").classList.remove("open");
     }
 
     // On Load Initialization
@@ -1426,6 +1509,7 @@
       updateStepProgress(2);
       document.getElementById("step-1").style.display = "none";
       document.getElementById("step-2").style.display = "flex";
+      document.getElementById("gallery-section").style.display = "none";
       state.currentStep = 2;
     }
 
