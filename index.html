@@ -917,6 +917,22 @@
     .rank-2 { color: #c0c0c0; }
     .rank-3 { color: #cd7f32; }
 
+    .member-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .leaderboard-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--border-color);
+      background: #000;
+      flex-shrink: 0;
+    }
+
     /* ==========================================
        FOOTER
        ========================================== */
@@ -1302,7 +1318,7 @@
             </div>
 
             <div class="pass-user-section">
-              <img id="pass-avatar-img" src="" alt="User Avatar" class="pass-avatar" crossorigin="anonymous" />
+              <img id="pass-avatar-img" src="" alt="User Avatar" class="pass-avatar" />
               <div class="pass-user-info">
                 <div id="pass-username-txt" class="pass-username">@username</div>
                 <div class="pass-role">
@@ -1422,6 +1438,36 @@
     const DOMAIN_URL = "https://www.mrstonk.work/";
 
     /* ==========================================
+       AVATAR URL HELPER (X PROFILE PICTURE)
+       Uses unavatar.io to resolve the X profile photo,
+       with a server-side fallback to a generated avatar
+       so the image never breaks if the profile photo
+       can't be resolved.
+       ========================================== */
+    function buildAvatarUrl(username) {
+      const clean = (username || "").replace("@", "").trim();
+      const fallback = encodeURIComponent(buildAvatarFallbackUrl(clean));
+      return `https://unavatar.io/twitter/${clean}?fallback=${fallback}`;
+    }
+
+    function buildAvatarFallbackUrl(username) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(username || "?")}&background=0D1119&color=00FF22&bold=true`;
+    }
+
+    function attachAvatarFallback(imgEl, username) {
+      imgEl.onerror = function () {
+        this.onerror = null;
+        this.src = buildAvatarFallbackUrl(username);
+      };
+    }
+
+    // Inline-safe version for template-string generated <img onerror="..."> tags
+    function handleAvatarError(imgEl, username) {
+      imgEl.onerror = null;
+      imgEl.src = buildAvatarFallbackUrl(username);
+    }
+
+    /* ==========================================
        APP STATE
        ========================================== */
     let state = {
@@ -1490,8 +1536,9 @@
 
       if (cleanVal.length >= 2) {
         state.username = cleanVal;
-        state.avatarUrl = `https://unavatar.io/twitter/${cleanVal}`;
+        state.avatarUrl = buildAvatarUrl(cleanVal);
         
+        attachAvatarFallback(previewAvatar, cleanVal);
         previewAvatar.src = state.avatarUrl;
         previewHandle.textContent = `@${cleanVal}`;
         previewContainer.style.display = "block";
@@ -1669,7 +1716,9 @@
       document.querySelectorAll(".step-item").forEach(el => el.classList.add("completed"));
 
       // Populate Pass Banner Card Data
-      document.getElementById("pass-avatar-img").src = state.avatarUrl;
+      const passAvatarImg = document.getElementById("pass-avatar-img");
+      attachAvatarFallback(passAvatarImg, state.username);
+      passAvatarImg.src = state.avatarUrl || buildAvatarUrl(state.username);
       document.getElementById("pass-username-txt").textContent = `@${state.username}`;
       document.getElementById("pass-entry-num").textContent = `#${state.entryNumber || '1001'}`;
       document.getElementById("pass-date").textContent = state.registeredAt;
@@ -1786,10 +1835,16 @@
           snap.forEach(docSnap => {
             const data = docSnap.data();
             const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+            const avatarSrc = buildAvatarUrl(data.username);
             html += `
               <tr>
                 <td class="rank-cell ${rankClass}">#${rank}</td>
-                <td>@${data.username}</td>
+                <td>
+                  <div class="member-cell">
+                    <img src="${avatarSrc}" alt="@${data.username}" class="leaderboard-avatar" loading="lazy" onerror="handleAvatarError(this, '${data.username}')" />
+                    <span>@${data.username}</span>
+                  </div>
+                </td>
                 <td><strong>${data.referralCount || 0}</strong></td>
               </tr>
             `;
