@@ -1,193 +1,699 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top 500 NFT Holders</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <title>CYBERPASS // Early Access Allowlist</title>
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourdomain.com/">
+    <meta property="og:title" content="CYBERPASS // Early Access Allowlist">
+    <meta property="og:description" content="Claim your high-end futuristic Web3 Allowlist Pass and secure your allocation.">
+    <meta property="og:image" content="https://unavatar.io/x/ethereum">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://yourdomain.com/">
+    <meta name="twitter:title" content="CYBERPASS // Early Access Allowlist">
+    <meta name="twitter:description" content="Claim your high-end futuristic Web3 Allowlist Pass and secure your allocation.">
+    <meta name="twitter:image" content="https://unavatar.io/x/ethereum">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            black: '#080811',
+                            card: '#0d0e1b',
+                            neon: '#00ffcc',
+                            purple: '#7928ca',
+                            pink: '#ff0080'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; }
-        h2 { color: #111; margin-bottom: 20px; font-size: 20px; }
-        .form-group { text-align: left; margin-bottom: 15px; }
-        label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #333; }
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background-color: #00c805; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        button:hover { background-color: #00a304; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        #status { margin-top: 15px; font-size: 14px; font-weight: bold; word-break: break-all; }
-        .loading { color: #007bff; }
-        .success { color: #28a745; }
-        .error { color: #dc3545; }
+        body {
+            background-color: #080811;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(121, 40, 202, 0.15), transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(0, 255, 204, 0.08), transparent 40%);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .neon-border {
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.2), inset 0 0 15px rgba(0, 255, 204, 0.1);
+            border: 1px solid rgba(0, 255, 204, 0.4);
+        }
+        .neon-glow-btn {
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+        }
+        .neon-glow-btn:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.7);
+        }
+        .cyber-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
     </style>
 </head>
-<body>
+<body class="text-slate-100 min-h-screen cyber-grid flex flex-col justify-between items-center relative overflow-x-hidden">
 
-<div class="card">
-    <h2>Top 500 NFT Holders</h2>
-    
-    <div class="form-group">
-        <label>RPC URL:</label>
-        <input type="text" id="rpcUrl" value="https://robinhood-mainnet.g.alchemy.com/v2/_v3B3LAcaa_AELEu9S2li" />
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 bg-cyber-card border border-cyber-neon text-cyber-neon px-6 py-3 rounded-xl shadow-2xl flex items-center space-x-3">
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+        <span id="toast-message" class="font-medium text-sm">Action Successful</span>
     </div>
 
-    <div class="form-group">
-        <label>NFT Contract Address:</label>
-        <input type="text" id="contractAddress" value="0x68e5a6aaf2503940f0337243063ab8f4da6bedec" />
-    </div>
+    <header class="w-full max-w-6xl px-6 py-6 flex justify-between items-center z-10">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyber-purple to-cyber-neon flex items-center justify-center font-bold text-black text-xl shadow-lg">
+                CP
+            </div>
+            <span class="font-bold text-xl tracking-wider bg-gradient-to-r from-white via-slate-200 to-cyber-neon bg-clip-text text-transparent">
+                CYBERPASS
+            </span>
+        </div>
+        <button id="nav-leaderboard-btn" class="flex items-center space-x-2 text-sm font-medium bg-slate-900/80 border border-slate-700 hover:border-cyber-neon px-4 py-2 rounded-xl transition duration-200">
+            <i data-lucide="trophy" class="w-4 h-4 text-cyber-neon"></i>
+            <span>Leaderboard</span>
+        </button>
+    </header>
 
-    <button onclick="getTopHolders()" id="downloadBtn">Top 500 Holders ডাউনলোড করুন</button>
-
-    <div id="status"></div>
-</div>
-
-<script>
-async function getTopHolders() {
-    const rpcUrl = document.getElementById('rpcUrl').value.trim();
-    const contractAddress = document.getElementById('contractAddress').value.trim();
-    const statusDiv = document.getElementById('status');
-    const downloadBtn = document.getElementById('downloadBtn');
-
-    if (!rpcUrl || !contractAddress) {
-        alert("RPC URL এবং Contract Address দিন!");
-        return;
-    }
-
-    downloadBtn.disabled = true;
-    statusDiv.className = "loading";
-    statusDiv.innerText = "⏳ সংযোগ স্থাপন করা হচ্ছে...";
-
-    try {
-        const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-        const currentBlock = await provider.getBlockNumber();
+    <main class="w-full max-w-xl px-4 py-8 z-10 my-auto">
         
-        statusDiv.innerText = `📊 বর্তমান ব্লক: ${currentBlock.toLocaleString()}`;
+        <div id="step-indicator" class="mb-8 flex justify-between items-center relative px-2">
+            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-800 -z-10"></div>
+            <div id="line-progress" class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-cyber-neon transition-all duration-300 -z-10" style="width: 0%;"></div>
 
-        // শুধু Transfer ইভেন্টের জন্য ABI
-        const abi = [
-            "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
-            "function balanceOf(address owner) view returns (uint256)"
-        ];
+            <div class="step-node active flex flex-col items-center space-y-1" data-step="1">
+                <div class="node-circle w-8 h-8 rounded-full bg-cyber-neon text-black font-bold flex items-center justify-center text-sm border-2 border-cyber-neon transition-all duration-200">1</div>
+                <span class="text-[10px] uppercase font-semibold text-cyber-neon tracking-wider">Identity</span>
+            </div>
+            <div class="step-node flex flex-col items-center space-y-1" data-step="2">
+                <div class="node-circle w-8 h-8 rounded-full bg-slate-900 text-slate-400 font-bold flex items-center justify-center text-sm border-2 border-slate-700 transition-all duration-200">2</div>
+                <span class="text-[10px] uppercase font-semibold text-slate-500 tracking-wider">Tasks</span>
+            </div>
+            <div class="step-node flex flex-col items-center space-y-1" data-step="3">
+                <div class="node-circle w-8 h-8 rounded-full bg-slate-900 text-slate-400 font-bold flex items-center justify-center text-sm border-2 border-slate-700 transition-all duration-200">3</div>
+                <span class="text-[10px] uppercase font-semibold text-slate-500 tracking-wider">Wallet</span>
+            </div>
+        </div>
 
-        const contract = new ethers.Contract(contractAddress, abi, provider);
-
-        // গত ১০,০০০ ব্লক থেকে Transfer লগ আনা (Alchemy Free Tier এর জন্য)
-        const fromBlock = currentBlock - 10000;
-        
-        statusDiv.innerText = `🔍 ${fromBlock.toLocaleString()} থেকে ${currentBlock.toLocaleString()} ব্লক স্ক্যান করা হচ্ছে...`;
-
-        const filter = contract.filters.Transfer();
-        const logs = await provider.getLogs({
-            fromBlock: fromBlock,
-            toBlock: currentBlock,
-            address: contractAddress,
-            topics: filter.topics
-        });
-
-        statusDiv.innerText = `📝 ${logs.length.toLocaleString()} টি Transfer Event পাওয়া গেছে!`;
-
-        if (logs.length === 0) {
-            statusDiv.className = "error";
-            statusDiv.innerText = "❌ কোনো Transfer Events পাওয়া যায়নি!";
-            return;
-        }
-
-        // ইউনিক অ্যাড্রেস সংগ্রহ
-        const uniqueAddresses = new Set();
-        const zeroAddress = "0x0000000000000000000000000000000000000000";
-
-        logs.forEach(log => {
-            try {
-                const parsed = contract.interface.parseLog(log);
-                const to = parsed.args.to;
-                if (to && to !== zeroAddress) {
-                    uniqueAddresses.add(to);
-                }
-            } catch (e) {
-                // Invalid log skip
-            }
-        });
-
-        const addressList = Array.from(uniqueAddresses);
-        
-        if (addressList.length === 0) {
-            statusDiv.className = "error";
-            statusDiv.innerText = "❌ কোনো ইউনিক অ্যাড্রেস পাওয়া যায়নি!";
-            return;
-        }
-
-        statusDiv.innerText = `👤 ${addressList.length.toLocaleString()} টি ইউনিক অ্যাড্রেস। ব্যালেন্স চেক করা হচ্ছে...`;
-
-        // ব্যালেন্স চেক (সবগুলো)
-        const holders = [];
-        let processed = 0;
-
-        for (const addr of addressList) {
-            try {
-                const balance = await contract.balanceOf(addr);
-                const count = balance.toNumber();
-                if (count > 0) {
-                    holders.push({ address: addr, balance: count });
-                }
-            } catch (e) {
-                // Skip
-            }
+        <div class="bg-cyber-card/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
             
-            processed++;
-            if (processed % 50 === 0) {
-                statusDiv.innerText = `⏳ ব্যালেন্স চেক: ${processed}/${addressList.length}`;
+            <section id="step-1" class="space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Identity Verification</h2>
+                    <p class="text-sm text-slate-400 mt-1">Search and select your X (Twitter) profile to initiate allowlist registration.</p>
+                </div>
+
+                <div class="relative space-y-2">
+                    <label class="block text-xs uppercase font-semibold tracking-wider text-slate-300">X Handle</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 font-medium">@</span>
+                        <input type="text" id="username-input" autocomplete="off" placeholder="username" class="w-full bg-slate-900/90 border border-slate-700 focus:border-cyber-neon focus:ring-1 focus:ring-cyber-neon rounded-xl py-3.5 pl-9 pr-4 text-slate-100 placeholder-slate-600 outline-none transition duration-200">
+                        <div id="search-spinner" class="hidden absolute right-4 top-1/2 -translate-y-1/2">
+                            <i data-lucide="loader-2" class="w-5 h-5 text-cyber-neon animate-spin"></i>
+                        </div>
+                    </div>
+
+                    <div id="profile-suggestion" class="hidden cursor-pointer mt-3 p-3 bg-slate-900/90 hover:bg-slate-800/90 border border-cyber-neon/40 rounded-xl flex items-center space-x-3 transition duration-150">
+                        <img id="suggested-avatar" src="" alt="Avatar" class="w-12 h-12 rounded-full border border-cyber-neon object-cover">
+                        <div>
+                            <p id="suggested-name" class="font-bold text-slate-100 text-sm">@username</p>
+                            <p class="text-xs text-cyber-neon flex items-center space-x-1">
+                                <span>Select profile</span>
+                                <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-step-1-next" disabled class="w-full py-4 rounded-xl bg-slate-800 text-slate-500 font-bold tracking-wider cursor-not-allowed transition duration-200 flex items-center justify-center space-x-2">
+                    <span>CONTINUE</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </section>
+
+            <section id="step-2" class="hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Social Verification</h2>
+                    <p class="text-sm text-slate-400 mt-1">Complete all mandatory protocol actions to unlock your ticket.</p>
+                </div>
+
+                <div class="space-y-3">
+                    <button id="task-follow" class="task-btn w-full p-4 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-700/80 hover:border-slate-500 rounded-xl flex items-center justify-between transition duration-200">
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="twitter" class="w-5 h-5 text-slate-300"></i>
+                            <span class="font-medium text-sm text-slate-200">Follow Official X Account</span>
+                        </div>
+                        <span class="status-badge text-xs px-3 py-1 rounded-full bg-slate-800 text-slate-400 font-medium border border-slate-700">Verify</span>
+                    </button>
+
+                    <button id="task-like" class="task-btn w-full p-4 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-700/80 hover:border-slate-500 rounded-xl flex items-center justify-between transition duration-200">
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="heart" class="w-5 h-5 text-slate-300"></i>
+                            <span class="font-medium text-sm text-slate-200">Like Announcement Tweet</span>
+                        </div>
+                        <span class="status-badge text-xs px-3 py-1 rounded-full bg-slate-800 text-slate-400 font-medium border border-slate-700">Verify</span>
+                    </button>
+
+                    <button id="task-retweet" class="task-btn w-full p-4 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-700/80 hover:border-slate-500 rounded-xl flex items-center justify-between transition duration-200">
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="repeat" class="w-5 h-5 text-slate-300"></i>
+                            <span class="font-medium text-sm text-slate-200">Retweet Announcement</span>
+                        </div>
+                        <span class="status-badge text-xs px-3 py-1 rounded-full bg-slate-800 text-slate-400 font-medium border border-slate-700">Verify</span>
+                    </button>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button id="btn-step-2-back" class="w-1/3 py-4 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 font-bold hover:bg-slate-800 transition duration-200">BACK</button>
+                    <button id="btn-step-2-next" disabled class="w-2/3 py-4 rounded-xl bg-slate-800 text-slate-500 font-bold tracking-wider cursor-not-allowed transition duration-200 flex items-center justify-center space-x-2">
+                        <span>CONTINUE</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </section>
+
+            <section id="step-3" class="hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Destination Wallet</h2>
+                    <p class="text-sm text-slate-400 mt-1">Provide your Ethereum Virtual Machine (EVM) compatible public wallet address.</p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-xs uppercase font-semibold tracking-wider text-slate-300">EVM Wallet Address</label>
+                    <div class="relative">
+                        <input type="text" id="wallet-input" autocomplete="off" placeholder="0x..." class="w-full bg-slate-900/90 border border-slate-700 focus:border-cyber-neon focus:ring-1 focus:ring-cyber-neon rounded-xl py-3.5 px-4 font-mono text-sm text-slate-100 placeholder-slate-600 outline-none transition duration-200">
+                    </div>
+                    <p id="wallet-error" class="hidden text-xs text-red-400 mt-1">Please enter a valid 42-character Ethereum address (0x...).</p>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button id="btn-step-3-back" class="w-1/3 py-4 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 font-bold hover:bg-slate-800 transition duration-200">BACK</button>
+                    <button id="btn-step-3-submit" class="w-2/3 py-4 rounded-xl bg-cyber-neon text-black font-extrabold tracking-wider neon-glow-btn transition duration-200 flex items-center justify-center space-x-2">
+                        <span>SUBMIT & CLAIM SPOT</span>
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </section>
+
+            <section id="step-4" class="hidden space-y-6 text-center">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-widest text-cyber-neon bg-cyber-neon/10 px-3 py-1 rounded-full border border-cyber-neon/30">Registration Confirmed</span>
+                    <h2 class="text-2xl font-bold text-white mt-2">Allowlist Pass Generated</h2>
+                </div>
+
+                <div id="pass-card" class="bg-gradient-to-b from-slate-900 via-cyber-card to-slate-950 border border-cyber-neon/40 rounded-2xl p-6 text-left relative overflow-hidden shadow-2xl space-y-5">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-cyber-neon/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                    <div class="flex justify-between items-start border-b border-slate-800 pb-4">
+                        <div>
+                            <p class="text-[10px] tracking-widest font-semibold text-cyber-neon uppercase">PROTOCOL TICKET</p>
+                            <h3 class="font-black text-xl text-white tracking-wider" id="card-project-title">CYBERPASS</h3>
+                        </div>
+                        <span class="text-[10px] font-mono border border-cyber-neon/40 bg-cyber-neon/10 text-cyber-neon px-2 py-0.5 rounded">
+                            VERIFIED BROKER
+                        </span>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyber-purple via-slate-800 to-cyber-neon p-0.5 shadow-lg flex items-center justify-center">
+                                <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-xl text-cyber-neon">
+                                    CP
+                                </div>
+                            </div>
+                            <img id="card-user-avatar" src="" alt="User Avatar" class="w-8 h-8 rounded-full border-2 border-slate-950 absolute -bottom-1 -right-1 object-cover bg-slate-900">
+                        </div>
+
+                        <div>
+                            <p id="card-username" class="font-bold text-lg text-white">@username</p>
+                            <p class="text-xs text-slate-400">Early Allocation Guaranteed</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80 font-mono">
+                        <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-800">
+                            <p class="text-[9px] text-slate-500 uppercase">ALLOWLIST SPOT</p>
+                            <p id="card-spot-number" class="text-sm font-bold text-cyber-neon">#----</p>
+                        </div>
+                        <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-800">
+                            <p class="text-[9px] text-slate-500 uppercase">ISSUED DATE</p>
+                            <p id="card-issue-date" class="text-xs font-bold text-slate-200 mt-0.5">2026-09-01</p>
+                        </div>
+                        <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-800 overflow-hidden">
+                            <p class="text-[9px] text-slate-500 uppercase">WALLET</p>
+                            <p id="card-wallet-address" class="text-xs font-bold text-slate-200 mt-0.5 truncate">0x00...0000</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <div class="flex space-x-3">
+                        <button id="btn-share-x" class="w-1/2 py-3.5 bg-sky-500 hover:bg-sky-400 text-black font-bold rounded-xl transition flex items-center justify-center space-x-2 text-sm shadow-lg">
+                            <i data-lucide="twitter" class="w-4 h-4 fill-current"></i>
+                            <span>Share on X</span>
+                        </button>
+                        <button id="btn-copy-ref" class="w-1/2 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold border border-slate-700 rounded-xl transition flex items-center justify-center space-x-2 text-sm">
+                            <i data-lucide="link" class="w-4 h-4"></i>
+                            <span>Copy Ref Link</span>
+                        </button>
+                    </div>
+                    <button id="btn-download-pass" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-cyber-neon border border-cyber-neon/30 font-semibold rounded-xl transition flex items-center justify-center space-x-2 text-xs">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Download Pass Card Image</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="leaderboard-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-cyber-card border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="trophy" class="w-6 h-6 text-cyber-neon"></i>
+                    <h3 class="text-xl font-bold text-white">Top 100 Referral Leaderboard</h3>
+                </div>
+                <button id="close-leaderboard-btn" class="text-slate-400 hover:text-white transition">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-3 flex-1">
+                <table class="w-full text-left text-sm">
+                    <thead class="text-xs uppercase text-slate-500 border-b border-slate-800">
+                        <tr>
+                            <th class="pb-3 font-semibold">Rank</th>
+                            <th class="pb-3 font-semibold">User</th>
+                            <th class="pb-3 font-semibold text-right">Invites</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body" class="divide-y divide-slate-800/60 font-mono">
+                        </tbody>
+                </table>
+                <div id="leaderboard-loader" class="text-center py-8">
+                    <i data-lucide="loader-2" class="w-8 h-8 text-cyber-neon animate-spin mx-auto"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="w-full max-w-6xl px-6 py-6 text-center text-xs text-slate-600 border-t border-slate-900 z-10">
+        &copy; 2026 CYBERPASS Protocol. All rights reserved.
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            getDoc, 
+            setDoc, 
+            runTransaction, 
+            query, 
+            orderBy, 
+            limit, 
+            getDocs 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ==========================================
+        // 1. PROJECT CONFIGURATION & CONSTANTS
+        // ==========================================
+        const FIREBASE_CONFIG = {
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const PROJECT_NAME = "CYBERPASS";
+        const PROJECT_HANDLE = "Ethereum"; // Change to your project's X handle
+        const TWEET_ID = "1234567890"; // Target Tweet ID for Like/Retweet intents
+
+        // Initialize Firebase
+        const app = initializeApp(FIREBASE_CONFIG);
+        const db = getFirestore(app);
+
+        // State Store
+        let currentStep = 1;
+        let selectedUser = { username: '', avatarUrl: '' };
+        let verifiedTasks = { follow: false, like: false, retweet: false };
+        let userPassData = null;
+        let referrerCode = new URLSearchParams(window.location.search).get('ref') || null;
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // ==========================================
+        // 2. DOM ELEMENTS
+        // ==========================================
+        const usernameInput = document.getElementById('username-input');
+        const searchSpinner = document.getElementById('search-spinner');
+        const profileSuggestion = document.getElementById('profile-suggestion');
+        const suggestedAvatar = document.getElementById('suggested-avatar');
+        const suggestedName = document.getElementById('suggested-name');
+        const btnStep1Next = document.getElementById('btn-step-1-next');
+        
+        const taskFollow = document.getElementById('task-follow');
+        const taskLike = document.getElementById('task-like');
+        const taskRetweet = document.getElementById('task-retweet');
+        const btnStep2Back = document.getElementById('btn-step-2-back');
+        const btnStep2Next = document.getElementById('btn-step-2-next');
+
+        const walletInput = document.getElementById('wallet-input');
+        const walletError = document.getElementById('wallet-error');
+        const btnStep3Back = document.getElementById('btn-step-3-back');
+        const btnStep3Submit = document.getElementById('btn-step-3-submit');
+
+        const btnShareX = document.getElementById('btn-share-x');
+        const btnCopyRef = document.getElementById('btn-copy-ref');
+        const btnDownloadPass = document.getElementById('btn-download-pass');
+
+        const leaderboardModal = document.getElementById('leaderboard-modal');
+        const navLeaderboardBtn = document.getElementById('nav-leaderboard-btn');
+        const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
+
+        // ==========================================
+        // 3. STEP NAVIGATION & FLOW CONTROLLER
+        // ==========================================
+        function setStep(step) {
+            currentStep = step;
+            document.querySelectorAll('main section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+
+            const progressPercentage = ((step - 1) / 3) * 100;
+            document.getElementById('line-progress').style.width = `${progressPercentage}%`;
+
+            document.querySelectorAll('.step-node').forEach(node => {
+                const nodeStep = parseInt(node.getAttribute('data-step'));
+                const circle = node.querySelector('.node-circle');
+                const label = node.querySelector('span');
+
+                if (nodeStep <= step) {
+                    circle.className = "node-circle w-8 h-8 rounded-full bg-cyber-neon text-black font-bold flex items-center justify-center text-sm border-2 border-cyber-neon transition-all duration-200";
+                    label.className = "text-[10px] uppercase font-semibold text-cyber-neon tracking-wider";
+                } else {
+                    circle.className = "node-circle w-8 h-8 rounded-full bg-slate-900 text-slate-400 font-bold flex items-center justify-center text-sm border-2 border-slate-700 transition-all duration-200";
+                    label.className = "text-[10px] uppercase font-semibold text-slate-500 tracking-wider";
+                }
+            });
+        }
+
+        // ==========================================
+        // 4. STEP 1: UNAVATAR USERNAME SEARCH
+        // ==========================================
+        let debounceTimer;
+        usernameInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            const username = e.target.value.trim().replace(/^@/, '');
+            
+            if (!username) {
+                profileSuggestion.classList.add('hidden');
+                btnStep1Next.disabled = true;
+                btnStep1Next.className = "w-full py-4 rounded-xl bg-slate-800 text-slate-500 font-bold tracking-wider cursor-not-allowed transition duration-200 flex items-center justify-center space-x-2";
+                return;
+            }
+
+            searchSpinner.classList.remove('hidden');
+
+            debounceTimer = setTimeout(() => {
+                const avatarUrl = `https://unavatar.io/x/${username}`;
+                suggestedAvatar.src = avatarUrl;
+                suggestedName.textContent = `@${username}`;
+                
+                // Unavatar Image Preload Check
+                const img = new Image();
+                img.src = avatarUrl;
+                img.onload = () => {
+                    searchSpinner.classList.add('hidden');
+                    profileSuggestion.classList.remove('hidden');
+                };
+                img.onerror = () => {
+                    searchSpinner.classList.add('hidden');
+                    // Render fallback state if picture query fails
+                    profileSuggestion.classList.remove('hidden');
+                };
+
+                selectedUser = { username, avatarUrl };
+            }, 400);
+        });
+
+        profileSuggestion.addEventListener('click', () => {
+            usernameInput.value = selectedUser.username;
+            profileSuggestion.classList.add('hidden');
+            btnStep1Next.disabled = false;
+            btnStep1Next.className = "w-full py-4 rounded-xl bg-cyber-neon text-black font-extrabold tracking-wider neon-glow-btn transition duration-200 flex items-center justify-center space-x-2";
+        });
+
+        btnStep1Next.addEventListener('click', () => setStep(2));
+
+        // ==========================================
+        // 5. STEP 2: SOCIAL TASKS & INTENTS
+        // ==========================================
+        function setupTask(buttonEl, intentUrl, taskKey) {
+            buttonEl.addEventListener('click', () => {
+                window.open(intentUrl, '_blank');
+                verifiedTasks[taskKey] = true;
+
+                const badge = buttonEl.querySelector('.status-badge');
+                badge.className = "status-badge text-xs px-3 py-1 rounded-full bg-cyber-neon/10 text-cyber-neon font-semibold border border-cyber-neon/40 flex items-center space-x-1";
+                badge.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i><span>Verified</span>`;
+                lucide.createIcons();
+
+                if (verifiedTasks.follow && verifiedTasks.like && verifiedTasks.retweet) {
+                    btnStep2Next.disabled = false;
+                    btnStep2Next.className = "w-2/3 py-4 rounded-xl bg-cyber-neon text-black font-extrabold tracking-wider neon-glow-btn transition duration-200 flex items-center justify-center space-x-2";
+                }
+            });
+        }
+
+        setupTask(taskFollow, `https://x.com/intent/follow?screen_name=${PROJECT_HANDLE}`, 'follow');
+        setupTask(taskLike, `https://x.com/intent/like?tweet_id=${TWEET_ID}`, 'like');
+        setupTask(taskRetweet, `https://x.com/intent/retweet?tweet_id=${TWEET_ID}`, 'retweet');
+
+        btnStep2Back.addEventListener('click', () => setStep(1));
+        btnStep2Next.addEventListener('click', () => setStep(3));
+
+        // ==========================================
+        // 6. STEP 3: EVM VALIDATION & FIREBASE SUBMISSION
+        // ==========================================
+        btnStep3Back.addEventListener('click', () => setStep(2));
+
+        function isValidEVMAddress(address) {
+            return /^0x[a-fA-F0-9]{40}$/.test(address);
+        }
+
+        btnStep3Submit.addEventListener('click', async () => {
+            const address = walletInput.value.trim();
+            if (!isValidEVMAddress(address)) {
+                walletError.classList.remove('hidden');
+                return;
+            }
+            walletError.classList.add('hidden');
+
+            btnStep3Submit.disabled = true;
+            btnStep3Submit.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto"></i>`;
+            lucide.createIcons();
+
+            try {
+                const userDocRef = doc(db, "allowlist", selectedUser.username.toLowerCase());
+                const counterDocRef = doc(db, "metadata", "stats");
+
+                let passSpotNumber = 1000;
+
+                // Firestore Transaction to guarantee sequential spot allocation and handle referrals safely
+                await runTransaction(db, async (transaction) => {
+                    const userDoc = await transaction.get(userDocRef);
+                    if (userDoc.exists()) {
+                        userPassData = userDoc.data();
+                        return;
+                    }
+
+                    const counterDoc = await transaction.get(counterDocRef);
+                    let totalCount = counterDoc.exists() ? counterDoc.data().totalSignups || 0 : 0;
+                    totalCount += 1;
+                    passSpotNumber = 1000 + totalCount;
+
+                    // Increment Referrer score if exists
+                    if (referrerCode && referrerCode.toLowerCase() !== selectedUser.username.toLowerCase()) {
+                        const referrerRef = doc(db, "allowlist", referrerCode.toLowerCase());
+                        const referrerDoc = await transaction.get(referrerRef);
+                        if (referrerDoc.exists()) {
+                            transaction.update(referrerRef, {
+                                referrals: (referrerDoc.data().referrals || 0) + 1
+                            });
+                        }
+                    }
+
+                    // Build user payload
+                    userPassData = {
+                        username: selectedUser.username,
+                        avatarUrl: selectedUser.avatarUrl,
+                        walletAddress: address,
+                        spotNumber: passSpotNumber,
+                        timestamp: new Date().toISOString(),
+                        referrals: 0,
+                        referredBy: referrerCode || null
+                    };
+
+                    transaction.set(userDocRef, userPassData);
+                    transaction.set(counterDocRef, { totalSignups: totalCount }, { merge: true });
+                });
+
+                // Populate Step 4 Visual Pass Card
+                renderPassCard(userPassData);
+                setStep(4);
+                
+                // Trigger celebratory confetti effect
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+
+            } catch (err) {
+                console.error("Firebase Error:", err);
+                showToast("Submission failed. Please check network/config.");
+                btnStep3Submit.disabled = false;
+                btnStep3Submit.innerHTML = `<span>SUBMIT & CLAIM SPOT</span><i data-lucide="sparkles" class="w-4 h-4"></i>`;
+                lucide.createIcons();
+            }
+        });
+
+        // ==========================================
+        // 7. STEP 4: PASS CARD GENERATION & SHARING
+        // ==========================================
+        function renderPassCard(data) {
+            document.getElementById('card-project-title').textContent = PROJECT_NAME;
+            document.getElementById('card-username').textContent = `@${data.username}`;
+            document.getElementById('card-user-avatar').src = data.avatarUrl;
+            document.getElementById('card-spot-number').textContent = `#${data.spotNumber}`;
+            document.getElementById('card-issue-date').textContent = new Date(data.timestamp).toISOString().split('T')[0];
+            
+            const maskedWallet = `${data.walletAddress.substring(0, 4)}...${data.walletAddress.substring(38)}`;
+            document.getElementById('card-wallet-address').textContent = maskedWallet;
+        }
+
+        // Share on X Intent Button
+        btnShareX.addEventListener('click', () => {
+            const refLink = `${window.location.origin}${window.location.pathname}?ref=${userPassData.username}`;
+            const tweetText = encodeURIComponent(`I just claimed my Early Allowlist Pass #${userPassData.spotNumber} for ${PROJECT_NAME}!\n\nSecure your spot here: ${refLink}`);
+            window.open(`https://x.com/intent/tweet?text=${tweetText}`, '_blank');
+        });
+
+        // Copy Referral Link Button
+        btnCopyRef.addEventListener('click', () => {
+            const refLink = `${window.location.origin}${window.location.pathname}?ref=${userPassData.username}`;
+            navigator.clipboard.writeText(refLink).then(() => {
+                showToast("Referral link copied to clipboard!");
+            });
+        });
+
+        // Canvas Pass Card Downloader
+        btnDownloadPass.addEventListener('click', () => {
+            const passElement = document.getElementById('pass-card');
+            html2canvas(passElement, {
+                backgroundColor: null,
+                scale: 2
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `${userPassData.username}-allowlist-pass.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        });
+
+        // ==========================================
+        // 8. LIVE TOP 100 LEADERBOARD
+        // ==========================================
+        async function fetchLeaderboard() {
+            const leaderboardBody = document.getElementById('leaderboard-body');
+            const leaderboardLoader = document.getElementById('leaderboard-loader');
+            
+            leaderboardBody.innerHTML = '';
+            leaderboardLoader.classList.remove('hidden');
+
+            try {
+                const q = query(
+                    collection(db, "allowlist"),
+                    orderBy("referrals", "desc"),
+                    limit(100)
+                );
+                
+                const querySnapshot = await getDocs(q);
+                leaderboardLoader.classList.add('hidden');
+
+                if (querySnapshot.empty) {
+                    leaderboardBody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-slate-500">No referrers logged yet.</td></tr>`;
+                    return;
+                }
+
+                let rank = 1;
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-slate-900/40 transition duration-150";
+                    row.innerHTML = `
+                        <td class="py-3 font-bold ${rank <= 3 ? 'text-cyber-neon' : 'text-slate-400'}">#${rank}</td>
+                        <td class="py-3 flex items-center space-x-2">
+                            <img src="${data.avatarUrl}" class="w-6 h-6 rounded-full object-cover border border-slate-700">
+                            <span class="text-slate-200 font-sans font-medium">@${data.username}</span>
+                        </td>
+                        <td class="py-3 text-right font-bold text-slate-200">${data.referrals || 0}</td>
+                    `;
+                    leaderboardBody.appendChild(row);
+                    rank++;
+                });
+            } catch (err) {
+                console.error("Leaderboard Query Error:", err);
+                leaderboardLoader.classList.add('hidden');
+                leaderboardBody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-red-400">Failed to load leaderboard data.</td></tr>`;
             }
         }
 
-        if (holders.length === 0) {
-            statusDiv.className = "error";
-            statusDiv.innerText = "❌ কোনো হোল্ডার খুঁজে পাওয়া যায়নি!";
-            return;
-        }
-
-        // সাজানো (যার বেশি NFT তার আগে)
-        holders.sort((a, b) => b.balance - a.balance);
-
-        // টপ ৫০০
-        const top500 = holders.slice(0, 500);
-
-        // CSV তৈরি
-        let csv = "Wallet Address,NFT Balance\n";
-        top500.forEach(h => {
-            csv += `"${h.address}",${h.balance}\n`;
+        navLeaderboardBtn.addEventListener('click', () => {
+            leaderboardModal.classList.remove('hidden');
+            fetchLeaderboard();
         });
 
-        // ডাউনলোড
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `top_500_holders_${contractAddress.slice(0, 8)}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        closeLeaderboardBtn.addEventListener('click', () => {
+            leaderboardModal.classList.add('hidden');
+        });
 
-        statusDiv.className = "success";
-        statusDiv.innerText = `✅ সফল! ${top500.length} জন হোল্ডারের CSV ডাউনলোড হয়েছে!`;
+        // ==========================================
+        // 9. HELPER FUNCTIONS
+        // ==========================================
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
 
-    } catch (error) {
-        console.error(error);
-        statusDiv.className = "error";
-        
-        let msg = error.message || 'অজানা এরর!';
-        if (msg.includes('block range')) {
-            msg = '⚠️ ব্লক রেঞ্জ খুব বড়! Free Tier এ ১০ ব্লক পর্যন্ত অনুমোদিত।';
-        } else if (msg.includes('Invalid API key')) {
-            msg = '❌ API Key সঠিক নয়!';
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-100px]', 'opacity-0');
+            }, 3000);
         }
-        
-        statusDiv.innerText = `❌ ${msg}`;
-    } finally {
-        downloadBtn.disabled = false;
-    }
-}
-</script>
-
+    </script>
 </body>
 </html>
