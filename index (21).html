@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mr.Stonk // Early Access Allowlist</title>
+
+  <!-- External Environment Config File Loader -->
+  <script src="./env.js"></script>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- External Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- Firebase Modular Web SDK (v10) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      getDocs, 
+      query, 
+      where, 
+      orderBy, 
+      limit, 
+      increment, 
+      runTransaction 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Safely load Firebase Config from window.ENV_FIREBASE_CONFIG or fallback to safe empty structure
+    const firebaseConfig = window.ENV_FIREBASE_CONFIG || {
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+      storageBucket: "",
+      messagingSenderId: "",
+      appId: ""
+    };
+
+    // Initialize Firebase safely
+    let db = null;
+    try {
+      if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "") {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+      } else {
+        console.warn("Mr.Stonk System: Firebase running in fallback mode (No env API Key detected).");
+      }
+    } catch (e) {
+      console.error("Firebase Initialization Error:", e);
+    }
+
+    window.db = db;
+    window.fsModules = { collection, doc, setDoc, getDoc, getDocs, query, where, orderBy, limit, increment, runTransaction };
+  </script>
+
+  <style>
+    /* ==========================================
+       CSS VARIABLES & THEME SETUP
+       ========================================== */
+    :root {
+      --bg-dark: #07090e;
+      --bg-card: rgba(13, 17, 25, 0.75);
+      --bg-card-hover: rgba(18, 24, 38, 0.85);
+      --border-color: rgba(0, 255, 163, 0.15);
+      --border-accent: #00ff22;
+      
+      --accent-green: #00ff22;
+      --accent-green-glow: rgba(0, 255, 163, 0.25);
+      --accent-cyan: #00f0ff;
+      --accent-cyan-glow: rgba(0, 240, 255, 0.2);
+      
+      --text-main: #f0f4f8;
+      --text-muted: #8a99ad;
+      --text-subtle: #526071;
+      
+      --danger: #ff3366;
+      --warning: #ffb800;
+      
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+      
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 80% 100%, rgba(0, 255, 163, 0.05) 0%, transparent 50%),
+        linear-gradient(to bottom, rgba(7, 9, 14, 0.8), rgba(7, 9, 14, 0.95));
+      background-attachment: fixed;
+    }
+
+    /* Ambient Background Grid */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; outline: none; font-family: var(--font-sans); }
+
+    /* ==========================================
+       HEADER & NAVBAR
+       ========================================== */
+    header {
+      width: 100%;
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(7, 9, 14, 0.8);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      object-fit: contain;
+      border: 1px solid var(--border-color);
+      background: rgba(0,0,0,0.4);
+    }
+
+    .brand-logo-fallback {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+      color: #000;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    .brand-title {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+
+    .brand-title span {
+      color: var(--accent-green);
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      padding: 0.6rem 1.1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* ==========================================
+       MAIN LAYOUT & CONTAINER
+       ========================================== */
+    main {
+      flex: 1;
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .hero-section {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0, 255, 163, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--accent-green);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.35rem 0.85rem;
+      border-radius: 50px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .badge-status .pulse-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    .hero-title {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 2.25rem;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .hero-subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      max-width: 580px;
+      line-height: 1.6;
+    }
+
+    /* ==========================================
+       STEP PROGRESS BAR
+       ========================================== */
+    .step-progress-container {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-subtle);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-dark);
+      transition: all 0.3s ease;
+    }
+
+    .step-label {
+      font-family: var(--font-mono);
+      font-size: 0.725rem;
+      font-weight: 700;
+      color: var(--text-subtle);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+
+    .step-item.active .step-num {
+      border-color: var(--accent-green);
+      color: #000;
+      background: var(--accent-green);
+      box-shadow: 0 0 12px var(--accent-green-glow);
+    }
+
+    .step-item.active .step-label {
+      color: var(--text-main);
+    }
+
+    .step-item.completed .step-num {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      background: rgba(0, 240, 255, 0.1);
+    }
+
+    .step-item.completed .step-label {
+      color: var(--text-muted);
+    }
+
+    /* ==========================================
+       CARD & FORM STYLES
+       ========================================== */
+    .flow-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      transition: transform 0.2s ease;
+    }
+
+    .card-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 1rem;
+    }
+
+    .card-header h2 {
+      font-family: var(--font-mono);
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .card-header p {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .input-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-field {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .input-field:focus {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green-glow);
+    }
+
+    .input-field.error {
+      border-color: var(--danger);
+      box-shadow: 0 0 10px rgba(255, 51, 102, 0.2);
+    }
+
+    .input-helper {
+      font-size: 0.775rem;
+      color: var(--text-subtle);
+      margin-top: 0.25rem;
+    }
+
+    .input-helper.error-text {
+      color: var(--danger);
+    }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent-green), #00d084);
+      color: #07090e;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 0.95rem 1.5rem;
+      border-radius: var(--radius-sm);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px var(--accent-green-glow);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0, 255, 163, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ==========================================
+       X PROFILE PREVIEW CARD
+       ========================================== */
+    .profile-preview-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .profile-info {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .profile-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--accent-green);
+    }
+
+    .profile-meta .profile-handle {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #fff;
+    }
+
+    .profile-meta .profile-status {
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+    }
+
+    /* ==========================================
+       TASK LIST (STEP 2)
+       ========================================== */
+    .instruction-box {
+      background: rgba(0, 240, 255, 0.04);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      font-size: 0.825rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .instruction-box strong {
+      color: var(--accent-cyan);
+      font-family: var(--font-mono);
+      display: block;
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .task-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .task-card.completed {
+      border-color: rgba(0, 255, 163, 0.3);
+      background: rgba(0, 255, 163, 0.03);
+    }
+
+    .task-details h4 {
+      font-size: 0.925rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .task-details p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .btn-task {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.775rem;
+      font-weight: 700;
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-task:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-task.done {
+      background: rgba(0, 255, 163, 0.12);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    /* ==========================================
+       ALLOWLIST PASS & X BANNER FRAME (STEP 4)
+       ========================================== */
+    .pass-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      text-align: center;
+    }
+
+    .pass-card-wrapper {
+      width: 100%;
+      max-width: 540px;
+      perspective: 1000px;
+    }
+
+    .pass-card {
+      background: linear-gradient(135deg, #0b0e14 0%, #151d2a 100%);
+      border: 2px solid var(--accent-green);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: 0 0 40px rgba(0, 255, 163, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    /* Ambient Banner Glows */
+    .pass-card::before {
+      content: "";
+      position: absolute;
+      top: -40%; right: -20%; width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(0, 255, 163, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .pass-card::after {
+      content: "";
+      position: absolute;
+      bottom: -40%; left: -20%; width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .pass-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+      padding-bottom: 1.2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .pass-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .pass-brand img {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--accent-green);
+    }
+
+    .pass-brand span {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+    }
+
+    .pass-tag {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #000;
+      background: var(--accent-green);
+      padding: 0.3rem 0.65rem;
+      border-radius: 4px;
+      letter-spacing: 1px;
+    }
+
+    .pass-user-section {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .pass-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-green);
+      object-fit: cover;
+      box-shadow: 0 0 15px var(--accent-green-glow);
+    }
+
+    .pass-user-info .pass-username {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: #fff;
+    }
+
+    .pass-user-info .pass-role {
+      font-size: 0.85rem;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.2rem;
+    }
+
+    .pass-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+      z-index: 2;
+    }
+
+    .pass-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .pass-field-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-subtle);
+      letter-spacing: 0.5px;
+    }
+
+    .pass-field-value {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .pass-actions {
+      display: flex;
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    .referral-box {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      text-align: left;
+    }
+
+    /* ==========================================
+       LEADERBOARD SECTION
+       ========================================== */
+    .leaderboard-section {
+      margin-top: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      backdrop-filter: blur(12px);
+    }
+
+    .leaderboard-header {
+      margin-bottom: 1.25rem;
+    }
+
+    .leaderboard-header h3 {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .leaderboard-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      color: var(--text-subtle);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.725rem;
+      letter-spacing: 1px;
+    }
+
+    .leaderboard-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text-main);
+    }
+
+    .rank-cell {
+      font-weight: 800;
+      width: 60px;
+    }
+
+    .rank-1 { color: #ffd700; }
+    .rank-2 { color: #c0c0c0; }
+    .rank-3 { color: #cd7f32; }
+
+    /* ==========================================
+       FOOTER
+       ========================================== */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.775rem;
+      color: var(--text-subtle);
+      background: rgba(7, 9, 14, 0.9);
+      margin-top: auto;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--accent-green);
+      color: var(--text-main);
+      padding: 0.85rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      max-width: 500px;
+      width: 100%;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      position: relative;
+    }
+
+    /* Mobile Responsive Adjustments */
+    @media (max-width: 640px) {
+      header { padding: 1rem; }
+      main { padding: 1.5rem 1rem; }
+      .hero-title { font-size: 1.65rem; }
+      .step-progress-container { padding: 1rem 0.75rem; }
+      .step-label { font-size: 0.65rem; }
+      .flow-card { padding: 1.25rem; }
+      .pass-grid { grid-template-columns: 1fr; }
+      .pass-actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand-container">
+      <img 
+        src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/2.png" 
+        alt="Mr.Stonk Logo" 
+        class="brand-logo"
+        onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
+      />
+      <div id="logo-fallback" class="brand-logo-fallback" style="display: none;">MS</div>
+      <div class="brand-title">Mr.<span>STONK</span></div>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-secondary" onclick="openLeaderboardModal()">
+        <i class="fa-solid fa-trophy" style="color: var(--warning);"></i>
+        Leaderboard
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main>
+
+    <!-- HERO SECTION -->
+    <section class="hero-section">
+      <div class="badge-status">
+        <span class="pulse-dot"></span>
+        EARLY ACCESS // ALLOWLIST OPEN
+      </div>
+      <h1 class="hero-title">MR.STONK // EARLY ACCESS</h1>
+      <p class="hero-subtitle">
+        Join the official Mr.Stonk early access allowlist. Complete the verification steps below and register the EVM wallet address you want associated with your allocation.
+      </p>
+    </section>
+
+    <!-- STEP PROGRESS INDICATOR -->
+    <div class="step-progress-container">
+      <div class="step-item active" id="step-indicator-1">
+        <div class="step-num">01</div>
+        <div class="step-label">IDENTITY</div>
+      </div>
+      <div class="step-item" id="step-indicator-2">
+        <div class="step-num">02</div>
+        <div class="step-label">VERIFY</div>
+      </div>
+      <div class="step-item" id="step-indicator-3">
+        <div class="step-num">03</div>
+        <div class="step-label">WALLET</div>
+      </div>
+    </div>
+
+    <!-- FLOW CONTAINER -->
+    <div id="flow-content">
+
+      <!-- STEP 1: IDENTITY -->
+      <div id="step-1" class="flow-card">
+        <div class="card-header">
+          <h2><i class="fa-brands fa-x-twitter"></i> Verify Your Identity</h2>
+          <p>Start your allowlist registration by entering your X username. We'll use it to associate your social verification and allowlist entry.</p>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="x-username-input">X USERNAME</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="x-username-input" 
+              class="input-field" 
+              placeholder="Enter your X username" 
+              autocomplete="off"
+              oninput="handleUsernameInput(this.value)"
+            />
+          </div>
+          <div id="username-helper" class="input-helper">Enter your username without the @ symbol.</div>
+        </div>
+
+        <!-- PROFILE PREVIEW (Hidden by default) -->
+        <div id="profile-preview-container" style="display: none;">
+          <div class="profile-preview-card">
+            <div class="profile-info">
+              <img id="preview-avatar" src="" alt="Avatar Preview" class="profile-avatar" />
+              <div class="profile-meta">
+                <div id="preview-handle" class="profile-handle">@username</div>
+                <div class="profile-status"><i class="fa-solid fa-circle-check"></i> Profile preview found</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-step-1" class="btn-primary" onclick="submitStep1()" disabled>
+          CONTINUE TO VERIFICATION <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+        <p class="input-helper" style="text-align: center;">Your X username is used solely to identify your allowlist registration record.</p>
+      </div>
+
+      <!-- STEP 2: SOCIAL VERIFICATION (Hidden by default) -->
+      <div id="step-2" class="flow-card" style="display: none;">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-user-check"></i> Complete Verification</h2>
+          <p>Complete the required Mr.Stonk social actions below. Open each action, complete it on X, then return here and mark the step as complete.</p>
+        </div>
+
+        <div class="instruction-box">
+          <strong><i class="fa-solid fa-circle-info"></i> How it works</strong>
+          1. Open the action on X.<br />
+          2. Complete the requested action.<br />
+          3. Return to Mr.Stonk and mark completed.<br />
+          4. Continue once all required actions are marked complete.
+        </div>
+
+        <div class="task-list">
+          <!-- Task 1: Follow -->
+          <div class="task-card" id="task-card-1">
+            <div class="task-details">
+              <h4>Follow Mr.Stonk</h4>
+              <p>Follow the official Mr.Stonk account on X (@0xMrStonk).</p>
+            </div>
+            <button class="btn-task" id="btn-task-1" onclick="handleTaskAction(1)">
+              OPEN X <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </button>
+          </div>
+
+          <!-- Task 2: Like -->
+          <div class="task-card" id="task-card-2">
+            <div class="task-details">
+              <h4>Like the Announcement</h4>
+              <p>Like the official Mr.Stonk announcement post.</p>
+            </div>
+            <button class="btn-task" id="btn-task-2" onclick="handleTaskAction(2)">
+              OPEN X <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </button>
+          </div>
+
+          <!-- Task 3: Repost -->
+          <div class="task-card" id="task-card-3">
+            <div class="task-details">
+              <h4>Repost the Announcement</h4>
+              <p>Repost the official Mr.Stonk announcement to help spread the launch.</p>
+            </div>
+            <button class="btn-task" id="btn-task-3" onclick="handleTaskAction(3)">
+              OPEN X <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="tasks-complete-banner" class="instruction-box" style="display: none; border-color: var(--accent-green); background: rgba(0, 255, 163, 0.05);">
+          <strong style="color: var(--accent-green);"><i class="fa-solid fa-circle-check"></i> Verification Complete</strong>
+          All required social actions have been marked complete. Continue to register your wallet address.
+        </div>
+
+        <button id="btn-step-2" class="btn-primary" onclick="submitStep2()" disabled>
+          CONTINUE TO WALLET <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+        <p class="input-helper" style="text-align: center;">Make sure you complete the required actions on X before marking them complete.</p>
+      </div>
+
+      <!-- STEP 3: WALLET REGISTRATION (Hidden by default) -->
+      <div id="step-3" class="flow-card" style="display: none;">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-wallet"></i> Register Your Wallet</h2>
+          <p>Enter the EVM wallet address you want associated with your Mr.Stonk allowlist entry.</p>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="wallet-address-input">EVM WALLET ADDRESS</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="wallet-address-input" 
+              class="input-field" 
+              placeholder="0x..." 
+              autocomplete="off"
+              oninput="validateWalletInput(this.value)"
+            />
+          </div>
+          <div id="wallet-helper" class="input-helper">Please enter a valid EVM wallet address beginning with 0x and containing 40 hexadecimal characters.</div>
+        </div>
+
+        <div class="instruction-box">
+          <strong><i class="fa-solid fa-shield-halved"></i> Wallet Check</strong>
+          Your wallet address will be linked to your allowlist record. Transactions or signatures are not required for registration. Please double-check your address before submitting.
+        </div>
+
+        <button id="btn-step-3" class="btn-primary" onclick="submitStep3()" disabled>
+          REGISTER FOR ALLOWLIST <i class="fa-solid fa-check"></i>
+        </button>
+      </div>
+
+      <!-- STEP 4: SUCCESS / PASS DISPLAY & BANNER GENERATION (Hidden by default) -->
+      <div id="step-4" class="pass-container" style="display: none;">
+        <div style="text-align: center;">
+          <div class="badge-status" style="margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-circle-check"></i> ALLOWLIST ENTRY CONFIRMED
+          </div>
+          <h2 style="font-family: var(--font-mono); font-size: 1.6rem; font-weight: 800;">YOU'RE ON THE LIST</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Your Mr.Stonk allowlist registration has been successfully recorded.</p>
+        </div>
+
+        <!-- DYNAMIC X POST BANNER CARD -->
+        <div class="pass-card-wrapper">
+          <div id="pass-card-node" class="pass-card">
+            <div class="pass-header">
+              <div class="pass-brand">
+                <img 
+                  src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/1.png" 
+                  alt="Mr.Stonk Logo"
+                  onerror="this.style.display='none';"
+                  crossorigin="anonymous"
+                />
+                <span>Mr.STONK</span>
+              </div>
+              <div class="pass-tag">OFFICIAL PASS</div>
+            </div>
+
+            <div class="pass-user-section">
+              <img id="pass-avatar-img" src="" alt="User Avatar" class="pass-avatar" crossorigin="anonymous" />
+              <div class="pass-user-info">
+                <div id="pass-username-txt" class="pass-username">@username</div>
+                <div class="pass-role">
+                  <i class="fa-solid fa-circle-check" style="color: var(--accent-green);"></i> Early Access Verified Member
+                </div>
+              </div>
+            </div>
+
+            <div class="pass-grid">
+              <div class="pass-field">
+                <span class="pass-field-label">ALLOWLIST ENTRY</span>
+                <span id="pass-entry-num" class="pass-field-value">#0000</span>
+              </div>
+              <div class="pass-field">
+                <span class="pass-field-label">DATE REGISTERED</span>
+                <span id="pass-date" class="pass-field-value">2026-09-01</span>
+              </div>
+              <div class="pass-field" style="grid-column: span 2;">
+                <span class="pass-field-label">REGISTERED EVM WALLET</span>
+                <span id="pass-wallet-txt" class="pass-field-value">0x0000...0000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASS ACTIONS -->
+        <div class="pass-actions" style="max-width: 540px;">
+          <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="downloadPassCard()">
+            <i class="fa-solid fa-download"></i> Download Banner Pass
+          </button>
+          <button class="btn-primary" style="flex: 1; justify-content: center;" onclick="shareOnX()">
+            <i class="fa-brands fa-x-twitter"></i> Share on X
+          </button>
+        </div>
+
+        <!-- REFERRAL BOX -->
+        <div class="referral-box" style="max-width: 540px;">
+          <h4 style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 800;">
+            <i class="fa-solid fa-users" style="color: var(--accent-cyan);"></i> INVITE FRIENDS
+          </h4>
+          <p style="font-size: 0.825rem; color: var(--text-muted);">
+            Share your personal Mr.Stonk referral link and help others join the allowlist.
+          </p>
+          <div class="input-wrapper">
+            <input type="text" id="referral-link-input" class="input-field" readonly value="https://mrstonk.app/?ref=username" />
+          </div>
+          <button class="btn-secondary" style="justify-content: center; background: rgba(0, 240, 255, 0.1); border-color: var(--accent-cyan);" onclick="copyReferralLink()">
+            <i class="fa-solid fa-copy"></i> Copy Referral Link
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- LEADERBOARD MODAL -->
+  <div id="leaderboard-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border: none; padding: 0;">
+        <h2><i class="fa-solid fa-trophy" style="color: var(--warning);"></i> REFERRAL LEADERBOARD</h2>
+        <button onclick="closeLeaderboardModal()" style="background: none; color: var(--text-muted); font-size: 1.25rem;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: -0.5rem;">Top community members by successful allowlist referrals.</p>
+
+      <div style="max-height: 320px; overflow-y: auto;">
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>RANK</th>
+              <th>MEMBER</th>
+              <th>REFERRALS</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-tbody">
+            <tr>
+              <td colspan="3" style="text-align: center; color: var(--text-subtle); padding: 2rem;">Loading leaderboard...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    &copy; 2026 Mr.Stonk // Early Access Protocol. All rights reserved.
+  </footer>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="toast">
+    <i id="toast-icon" class="fa-solid fa-circle-check" style="color: var(--accent-green);"></i>
+    <span id="toast-msg">Action completed successfully</span>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    /* ==========================================
+       CONFIGURED X (TWITTER) CONSTANTS
+       ========================================== */
+    const PROJECT_NAME = "Mr.Stonk";
+    const PROJECT_HANDLE = "0xMrStonk"; 
+    const TWEET_ID = "2093023734089072951";
+    const FALLBACK_LOGO = "https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/1.png";
+
+    /* ==========================================
+       APP STATE
+       ========================================== */
+    let state = {
+      currentStep: 1,
+      username: "",
+      referrer: "",
+      avatarUrl: "",
+      tasks: { 1: false, 2: false, 3: false },
+      wallet: "",
+      entryNumber: null,
+      registeredAt: null
+    };
+
+    // On Load Initialization
+    window.addEventListener("DOMContentLoaded", () => {
+      // Parse Referral Parameter from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const refParam = urlParams.get("ref");
+      if (refParam) {
+        state.referrer = refParam.replace("@", "").trim();
+      }
+    });
+
+    /* ==========================================
+       STEP 1 LOGIC
+       ========================================== */
+    function handleUsernameInput(val) {
+      const cleanVal = val.replace("@", "").trim();
+      const btn = document.getElementById("btn-step-1");
+      const previewContainer = document.getElementById("profile-preview-container");
+      const previewAvatar = document.getElementById("preview-avatar");
+      const previewHandle = document.getElementById("preview-handle");
+
+      if (cleanVal.length >= 2) {
+        state.username = cleanVal;
+        state.avatarUrl = `https://unavatar.io/twitter/${cleanVal}`;
+        
+        previewAvatar.src = state.avatarUrl;
+        previewHandle.textContent = `@${cleanVal}`;
+        previewContainer.style.display = "block";
+        btn.disabled = false;
+      } else {
+        previewContainer.style.display = "none";
+        btn.disabled = true;
+      }
+    }
+
+    function submitStep1() {
+      if (!state.username) return;
+      
+      // Update UI for Step 2
+      updateStepProgress(2);
+      document.getElementById("step-1").style.display = "none";
+      document.getElementById("step-2").style.display = "flex";
+      state.currentStep = 2;
+    }
+
+    /* ==========================================
+       STEP 2 LOGIC (SOCIAL VERIFICATION LINKS)
+       ========================================== */
+    function handleTaskAction(taskId) {
+      let targetUrl = "https://x.com";
+      
+      if (taskId === 1) {
+        // Direct Follow Link
+        targetUrl = `https://x.com/intent/follow?screen_name=${PROJECT_HANDLE}`;
+      } else if (taskId === 2) {
+        // Direct Like Link
+        targetUrl = `https://x.com/intent/like?tweet_id=${TWEET_ID}`;
+      } else if (taskId === 3) {
+        // Direct Retweet Link
+        targetUrl = `https://x.com/intent/retweet?tweet_id=${TWEET_ID}`;
+      }
+
+      window.open(targetUrl, "_blank");
+
+      // Update Task State
+      state.tasks[taskId] = true;
+      const taskBtn = document.getElementById(`btn-task-${taskId}`);
+      const taskCard = document.getElementById(`task-card-${taskId}`);
+
+      taskBtn.className = "btn-task done";
+      taskBtn.innerHTML = `<i class="fa-solid fa-check"></i> MARKED COMPLETE`;
+      taskCard.classList.add("completed");
+
+      checkAllTasksStatus();
+    }
+
+    function checkAllTasksStatus() {
+      const allDone = state.tasks[1] && state.tasks[2] && state.tasks[3];
+      const step2Btn = document.getElementById("btn-step-2");
+      const banner = document.getElementById("tasks-complete-banner");
+
+      if (allDone) {
+        step2Btn.disabled = false;
+        banner.style.display = "block";
+      }
+    }
+
+    function submitStep2() {
+      updateStepProgress(3);
+      document.getElementById("step-2").style.display = "none";
+      document.getElementById("step-3").style.display = "flex";
+      state.currentStep = 3;
+    }
+
+    /* ==========================================
+       STEP 3 LOGIC (WALLET REGISTRATION)
+       ========================================== */
+    function validateWalletInput(val) {
+      const clean = val.trim();
+      const isValid = /^0x[a-fA-F0-9]{40}$/.test(clean);
+      const btn = document.getElementById("btn-step-3");
+      const inputEl = document.getElementById("wallet-address-input");
+      const helper = document.getElementById("wallet-helper");
+
+      if (clean.length > 0 && !isValid) {
+        inputEl.classList.add("error");
+        helper.classList.add("error-text");
+        btn.disabled = true;
+      } else if (isValid) {
+        inputEl.classList.remove("error");
+        helper.classList.remove("error-text");
+        state.wallet = clean;
+        btn.disabled = false;
+      } else {
+        inputEl.classList.remove("error");
+        helper.classList.remove("error-text");
+        btn.disabled = true;
+      }
+    }
+
+    async function submitStep3() {
+      if (!state.wallet) return;
+
+      const btn = document.getElementById("btn-step-3");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> REGISTERING ALLOWLIST ENTRY...`;
+
+      const now = new Date();
+      state.registeredAt = now.toISOString().split('T')[0];
+
+      try {
+        if (window.db && window.fsModules) {
+          const { collection, doc, setDoc, getDoc, runTransaction, increment } = window.fsModules;
+          const userDocRef = doc(window.db, "allowlist", state.username.toLowerCase());
+          
+          // Check for existing entry
+          const existingSnap = await getDoc(userDocRef);
+          if (existingSnap.exists()) {
+            showToast("Username already registered on allowlist.", true);
+            btn.disabled = false;
+            btn.innerHTML = `REGISTER FOR ALLOWLIST <i class="fa-solid fa-check"></i>`;
+            return;
+          }
+
+          // Transaction for sequential entry count & record saving
+          let entryNum = 1001;
+          const counterRef = doc(window.db, "meta", "stats");
+          
+          await runTransaction(window.db, async (transaction) => {
+            const counterSnap = await transaction.get(counterRef);
+            if (counterSnap.exists()) {
+              entryNum = (counterSnap.data().totalEntries || 1000) + 1;
+              transaction.update(counterRef, { totalEntries: increment(1) });
+            } else {
+              transaction.set(counterRef, { totalEntries: entryNum });
+            }
+
+            transaction.set(userDocRef, {
+              username: state.username,
+              wallet: state.wallet,
+              referrer: state.referrer || null,
+              entryNumber: entryNum,
+              referralCount: 0,
+              createdAt: new Date()
+            });
+
+            // Increment referrer stats if exists
+            if (state.referrer) {
+              const refDocRef = doc(window.db, "allowlist", state.referrer.toLowerCase());
+              const refSnap = await transaction.get(refDocRef);
+              if (refSnap.exists()) {
+                transaction.update(refDocRef, { referralCount: increment(1) });
+              }
+            }
+          });
+
+          state.entryNumber = entryNum;
+        } else {
+          // Fallback local mode
+          state.entryNumber = Math.floor(1000 + Math.random() * 9000);
+        }
+
+        // Render Success Banner Pass Screen
+        renderPassScreen();
+
+      } catch (err) {
+        console.error("Firestore Registration Error:", err);
+        showToast("Something went wrong saving registration. Please try again.", true);
+        btn.disabled = false;
+        btn.innerHTML = `REGISTER FOR ALLOWLIST <i class="fa-solid fa-check"></i>`;
+      }
+    }
+
+    /* ==========================================
+       PASS SCREEN & BANNER FRAME (STEP 4)
+       ========================================== */
+    function renderPassScreen() {
+      document.getElementById("step-3").style.display = "none";
+      document.getElementById("step-4").style.display = "flex";
+      
+      // Complete step indicator
+      document.querySelectorAll(".step-item").forEach(el => el.classList.add("completed"));
+
+      // Populate Pass Banner Card Data
+      document.getElementById("pass-avatar-img").src = state.avatarUrl;
+      document.getElementById("pass-username-txt").textContent = `@${state.username}`;
+      document.getElementById("pass-entry-num").textContent = `#${state.entryNumber || '1001'}`;
+      document.getElementById("pass-date").textContent = state.registeredAt;
+      
+      const shortWallet = `${state.wallet.substring(0, 6)}...${state.wallet.substring(state.wallet.length - 4)}`;
+      document.getElementById("pass-wallet-txt").textContent = shortWallet;
+
+      // Populate Referral Link
+      const refLink = `${window.location.origin}${window.location.pathname}?ref=${state.username}`;
+      document.getElementById("referral-link-input").value = refLink;
+
+      // Trigger Celebration Confetti
+      if (window.confetti) {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#00ff22', '#00f0ff', '#ffffff']
+        });
+      }
+    }
+
+    /* ==========================================
+       UTILITY & SOCIAL ACTIONS
+       ========================================== */
+    function updateStepProgress(activeStep) {
+      for (let i = 1; i <= 3; i++) {
+        const el = document.getElementById(`step-indicator-${i}`);
+        if (i < activeStep) {
+          el.className = "step-item completed";
+        } else if (i === activeStep) {
+          el.className = "step-item active";
+        } else {
+          el.className = "step-item";
+        }
+      }
+    }
+
+    function copyReferralLink() {
+      const input = document.getElementById("referral-link-input");
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      showToast("Referral link copied to clipboard.");
+    }
+
+    function shareOnX() {
+      const refLink = document.getElementById("referral-link-input").value;
+      const text = encodeURIComponent(
+        `Just secured my ${PROJECT_NAME} early access allowlist entry (#${state.entryNumber})! 🔥\n\nJoin the allowlist:`
+      );
+      const url = `https://x.com/intent/tweet?text=${text}&url=${encodeURIComponent(refLink)}`;
+      window.open(url, "_blank");
+    }
+
+    function downloadPassCard() {
+      const passNode = document.getElementById("pass-card-node");
+      if (!window.html2canvas) return;
+
+      showToast("Generating high resolution banner pass...");
+
+      html2canvas(passNode, {
+        backgroundColor: "#07090e",
+        scale: 2,
+        useCORS: true,
+        allowTaint: true
+      }).then(canvas => {
+        const link = document.createElement("a");
+        link.download = `MrStonk-Allowlist-Pass-${state.username}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        showToast("Banner Pass downloaded successfully!");
+      }).catch(err => {
+        console.error("Canvas Export Error:", err);
+        showToast("Error generating image pass.", true);
+      });
+    }
+
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById("toast");
+      const icon = document.getElementById("toast-icon");
+      const msgEl = document.getElementById("toast-msg");
+
+      msgEl.textContent = msg;
+      icon.className = isError ? "fa-solid fa-triangle-exclamation" : "fa-solid fa-circle-check";
+      icon.style.color = isError ? "var(--danger)" : "var(--accent-green)";
+
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3500);
+    }
+
+    /* ==========================================
+       LEADERBOARD MODAL LOGIC
+       ========================================== */
+    async function openLeaderboardModal() {
+      const modal = document.getElementById("leaderboard-modal");
+      modal.classList.add("open");
+      
+      const tbody = document.getElementById("leaderboard-tbody");
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-subtle); padding: 2rem;">Loading leaderboard...</td></tr>`;
+
+      try {
+        if (window.db && window.fsModules) {
+          const { collection, getDocs, query, orderBy, limit } = window.fsModules;
+          const q = query(collection(window.db, "allowlist"), orderBy("referralCount", "desc"), limit(10));
+          const snap = await getDocs(q);
+
+          if (snap.empty) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-subtle); padding: 2rem;">No referral activity yet.</td></tr>`;
+            return;
+          }
+
+          let html = "";
+          let rank = 1;
+          snap.forEach(docSnap => {
+            const data = docSnap.data();
+            const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+            html += `
+              <tr>
+                <td class="rank-cell ${rankClass}">#${rank}</td>
+                <td>@${data.username}</td>
+                <td><strong>${data.referralCount || 0}</strong></td>
+              </tr>
+            `;
+            rank++;
+          });
+          tbody.innerHTML = html;
+        } else {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-subtle); padding: 2rem;">Connect Firebase in env.js to view live leaderboard.</td></tr>`;
+        }
+      } catch (err) {
+        console.error("Leaderboard Error:", err);
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--danger); padding: 2rem;">Failed to load leaderboard.</td></tr>`;
+      }
+    }
+
+    function closeLeaderboardModal() {
+      document.getElementById("leaderboard-modal").classList.remove("open");
+    }
+  </script>
+</body>
+</html>
