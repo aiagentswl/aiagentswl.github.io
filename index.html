@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mr.Stonk // Early Access Allowlist</title>
 
+  <!-- External Environment Config File Loader -->
+  <script src="./env.js"></script>
+
   <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -33,24 +36,24 @@
       runTransaction 
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Firebase Config Placeholder (Insert actual credentials for deployment)
-    const firebaseConfig = {
-      apiKey: "AIzaSyCVDNtfeHmyeiLevNkWaAOIQs3dF1Yx6Rk",
-      authDomain: "kick-a9ee1.firebaseapp.com",
-      projectId: "kick-a9ee1",
-      storageBucket: "kick-a9ee1.firebasestorage.app",
-      messagingSenderId: "613337178500",
-      appId: "1:613337178500:web:015277a7b8eec0230b7dd1"
+    // Safely load Firebase Config from window.ENV_FIREBASE_CONFIG or fallback to safe empty structure
+    const firebaseConfig = window.ENV_FIREBASE_CONFIG || {
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+      storageBucket: "",
+      messagingSenderId: "",
+      appId: ""
     };
 
     // Initialize Firebase safely
     let db = null;
     try {
-      if (firebaseConfig.apiKey !== "AIzaSyCVDNtfeHmyeiLevNkWaAOIQs3dF1Yx6Rk") {
+      if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "") {
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
       } else {
-        console.warn("Mr.Stonk System: Firebase running in local fallback mode (placeholder config detected).");
+        console.warn("Mr.Stonk System: Firebase running in fallback mode (No env API Key detected).");
       }
     } catch (e) {
       console.error("Firebase Initialization Error:", e);
@@ -595,7 +598,7 @@
     }
 
     /* ==========================================
-       ALLOWLIST PASS SCREEN (STEP 4)
+       ALLOWLIST PASS & X BANNER FRAME (STEP 4)
        ========================================== */
     .pass-container {
       display: flex;
@@ -607,29 +610,38 @@
 
     .pass-card-wrapper {
       width: 100%;
-      max-width: 440px;
+      max-width: 540px;
       perspective: 1000px;
     }
 
     .pass-card {
-      background: linear-gradient(145deg, rgba(18, 24, 38, 0.95), rgba(7, 9, 14, 0.98));
-      border: 1px solid var(--border-accent);
+      background: linear-gradient(135deg, #0b0e14 0%, #151d2a 100%);
+      border: 2px solid var(--accent-green);
       border-radius: var(--radius-lg);
-      padding: 1.75rem;
-      box-shadow: 0 0 35px rgba(0, 255, 163, 0.15);
+      padding: 2rem;
+      box-shadow: 0 0 40px rgba(0, 255, 163, 0.2);
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      gap: 1.5rem;
       position: relative;
       overflow: hidden;
       text-align: left;
     }
 
+    /* Ambient Banner Glows */
     .pass-card::before {
       content: "";
       position: absolute;
-      top: -50%; left: -50%; width: 200%; height: 200%;
-      background: radial-gradient(circle at 30% 30%, rgba(0, 255, 163, 0.08), transparent 50%);
+      top: -40%; right: -20%; width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(0, 255, 163, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .pass-card::after {
+      content: "";
+      position: absolute;
+      bottom: -40%; left: -20%; width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, transparent 70%);
       pointer-events: none;
     }
 
@@ -637,36 +649,39 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
-      padding-bottom: 1rem;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+      padding-bottom: 1.2rem;
+      position: relative;
+      z-index: 2;
     }
 
     .pass-brand {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.75rem;
     }
 
     .pass-brand img {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--accent-green);
     }
 
     .pass-brand span {
       font-family: var(--font-mono);
       font-weight: 800;
-      font-size: 1rem;
+      font-size: 1.2rem;
       letter-spacing: 1px;
     }
 
     .pass-tag {
       font-family: var(--font-mono);
-      font-size: 0.65rem;
-      font-weight: 700;
+      font-size: 0.7rem;
+      font-weight: 800;
       color: #000;
       background: var(--accent-green);
-      padding: 0.25rem 0.55rem;
+      padding: 0.3rem 0.65rem;
       border-radius: 4px;
       letter-spacing: 1px;
     }
@@ -674,43 +689,52 @@
     .pass-user-section {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 1.2rem;
+      position: relative;
+      z-index: 2;
     }
 
     .pass-avatar {
-      width: 56px;
-      height: 56px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       border: 2px solid var(--accent-green);
       object-fit: cover;
+      box-shadow: 0 0 15px var(--accent-green-glow);
     }
 
     .pass-user-info .pass-username {
       font-family: var(--font-mono);
       font-weight: 800;
-      font-size: 1.1rem;
+      font-size: 1.25rem;
       color: #fff;
     }
 
     .pass-user-info .pass-role {
-      font-size: 0.775rem;
+      font-size: 0.85rem;
       color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.2rem;
     }
 
     .pass-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
-      background: rgba(0,0,0,0.3);
-      padding: 0.85rem;
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+      z-index: 2;
     }
 
     .pass-field {
       display: flex;
       flex-direction: column;
-      gap: 0.2rem;
+      gap: 0.25rem;
     }
 
     .pass-field-label {
@@ -722,7 +746,7 @@
 
     .pass-field-value {
       font-family: var(--font-mono);
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 700;
       color: var(--text-main);
     }
@@ -906,7 +930,7 @@
     </div>
     <div class="nav-actions">
       <button class="btn-secondary" onclick="openLeaderboardModal()">
-        <i class="fa-solid => fa-trophy" style="color: var(--warning);"></i>
+        <i class="fa-solid fa-trophy" style="color: var(--warning);"></i>
         Leaderboard
       </button>
     </div>
@@ -1004,18 +1028,18 @@
         </div>
 
         <div class="task-list">
-          <!-- Task 1 -->
+          <!-- Task 1: Follow -->
           <div class="task-card" id="task-card-1">
             <div class="task-details">
               <h4>Follow Mr.Stonk</h4>
-              <p>Follow the official Mr.Stonk account on X.</p>
+              <p>Follow the official Mr.Stonk account on X (@0xMrStonk).</p>
             </div>
             <button class="btn-task" id="btn-task-1" onclick="handleTaskAction(1)">
               OPEN X <i class="fa-solid fa-arrow-up-right-from-square"></i>
             </button>
           </div>
 
-          <!-- Task 2 -->
+          <!-- Task 2: Like -->
           <div class="task-card" id="task-card-2">
             <div class="task-details">
               <h4>Like the Announcement</h4>
@@ -1026,7 +1050,7 @@
             </button>
           </div>
 
-          <!-- Task 3 -->
+          <!-- Task 3: Repost -->
           <div class="task-card" id="task-card-3">
             <div class="task-details">
               <h4>Repost the Announcement</h4>
@@ -1082,7 +1106,7 @@
         </button>
       </div>
 
-      <!-- STEP 4: SUCCESS / PASS DISPLAY (Hidden by default) -->
+      <!-- STEP 4: SUCCESS / PASS DISPLAY & BANNER GENERATION (Hidden by default) -->
       <div id="step-4" class="pass-container" style="display: none;">
         <div style="text-align: center;">
           <div class="badge-status" style="margin-bottom: 0.5rem;">
@@ -1092,40 +1116,43 @@
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Your Mr.Stonk allowlist registration has been successfully recorded.</p>
         </div>
 
-        <!-- GENERATED PASS CARD -->
+        <!-- DYNAMIC X POST BANNER CARD -->
         <div class="pass-card-wrapper">
           <div id="pass-card-node" class="pass-card">
             <div class="pass-header">
               <div class="pass-brand">
                 <img 
                   src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/1.png" 
-                  alt="Mr.Stonk"
+                  alt="Mr.Stonk Logo"
                   onerror="this.style.display='none';"
+                  crossorigin="anonymous"
                 />
                 <span>Mr.STONK</span>
               </div>
-              <div class="pass-tag">ALLOWLIST PASS</div>
+              <div class="pass-tag">OFFICIAL PASS</div>
             </div>
 
             <div class="pass-user-section">
-              <img id="pass-avatar-img" src="" alt="User Avatar" class="pass-avatar" />
+              <img id="pass-avatar-img" src="" alt="User Avatar" class="pass-avatar" crossorigin="anonymous" />
               <div class="pass-user-info">
                 <div id="pass-username-txt" class="pass-username">@username</div>
-                <div class="pass-role">Mr.Stonk Early Access</div>
+                <div class="pass-role">
+                  <i class="fa-solid fa-circle-check" style="color: var(--accent-green);"></i> Early Access Verified Member
+                </div>
               </div>
             </div>
 
             <div class="pass-grid">
               <div class="pass-field">
-                <span class="pass-field-label">ENTRY NO.</span>
+                <span class="pass-field-label">ALLOWLIST ENTRY</span>
                 <span id="pass-entry-num" class="pass-field-value">#0000</span>
               </div>
               <div class="pass-field">
-                <span class="pass-field-label">REGISTERED</span>
+                <span class="pass-field-label">DATE REGISTERED</span>
                 <span id="pass-date" class="pass-field-value">2026-09-01</span>
               </div>
               <div class="pass-field" style="grid-column: span 2;">
-                <span class="pass-field-label">REGISTERED WALLET</span>
+                <span class="pass-field-label">REGISTERED EVM WALLET</span>
                 <span id="pass-wallet-txt" class="pass-field-value">0x0000...0000</span>
               </div>
             </div>
@@ -1133,9 +1160,9 @@
         </div>
 
         <!-- PASS ACTIONS -->
-        <div class="pass-actions" style="max-width: 440px;">
+        <div class="pass-actions" style="max-width: 540px;">
           <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="downloadPassCard()">
-            <i class="fa-solid fa-download"></i> Download Pass
+            <i class="fa-solid fa-download"></i> Download Banner Pass
           </button>
           <button class="btn-primary" style="flex: 1; justify-content: center;" onclick="shareOnX()">
             <i class="fa-brands fa-x-twitter"></i> Share on X
@@ -1143,7 +1170,7 @@
         </div>
 
         <!-- REFERRAL BOX -->
-        <div class="referral-box" style="max-width: 440px;">
+        <div class="referral-box" style="max-width: 540px;">
           <h4 style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 800;">
             <i class="fa-solid fa-users" style="color: var(--accent-cyan);"></i> INVITE FRIENDS
           </h4>
@@ -1205,11 +1232,11 @@
   <!-- JAVASCRIPT LOGIC -->
   <script>
     /* ==========================================
-       CONFIGURATION CONSTANTS
+       CONFIGURED X (TWITTER) CONSTANTS
        ========================================== */
     const PROJECT_NAME = "Mr.Stonk";
-    const PROJECT_HANDLE = "YOUR_MR_STONK_X_HANDLE"; // Insert official X handle (without @)
-    const TWEET_ID = "YOUR_ANNOUNCEMENT_TWEET_ID";   // Insert official announcement tweet ID
+    const PROJECT_HANDLE = "0xMrStonk"; 
+    const TWEET_ID = "2093023734089072951";
     const FALLBACK_LOGO = "https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/1.png";
 
     /* ==========================================
@@ -1271,23 +1298,20 @@
     }
 
     /* ==========================================
-       STEP 2 LOGIC (SOCIAL VERIFICATION)
+       STEP 2 LOGIC (SOCIAL VERIFICATION LINKS)
        ========================================== */
     function handleTaskAction(taskId) {
       let targetUrl = "https://x.com";
       
       if (taskId === 1) {
-        targetUrl = PROJECT_HANDLE !== "YOUR_MR_STONK_X_HANDLE" 
-          ? `https://x.com/intent/follow?screen_name=${PROJECT_HANDLE}` 
-          : `https://x.com`;
+        // Direct Follow Link
+        targetUrl = `https://x.com/intent/follow?screen_name=${PROJECT_HANDLE}`;
       } else if (taskId === 2) {
-        targetUrl = TWEET_ID !== "YOUR_ANNOUNCEMENT_TWEET_ID" 
-          ? `https://x.com/intent/like?tweet_id=${TWEET_ID}` 
-          : `https://x.com`;
+        // Direct Like Link
+        targetUrl = `https://x.com/intent/like?tweet_id=${TWEET_ID}`;
       } else if (taskId === 3) {
-        targetUrl = TWEET_ID !== "YOUR_ANNOUNCEMENT_TWEET_ID" 
-          ? `https://x.com/intent/retweet?tweet_id=${TWEET_ID}` 
-          : `https://x.com`;
+        // Direct Retweet Link
+        targetUrl = `https://x.com/intent/retweet?tweet_id=${TWEET_ID}`;
       }
 
       window.open(targetUrl, "_blank");
@@ -1410,7 +1434,7 @@
           state.entryNumber = Math.floor(1000 + Math.random() * 9000);
         }
 
-        // Render Success Pass
+        // Render Success Banner Pass Screen
         renderPassScreen();
 
       } catch (err) {
@@ -1422,7 +1446,7 @@
     }
 
     /* ==========================================
-       PASS SCREEN & SUCCESS (STEP 4)
+       PASS SCREEN & BANNER FRAME (STEP 4)
        ========================================== */
     function renderPassScreen() {
       document.getElementById("step-3").style.display = "none";
@@ -1431,7 +1455,7 @@
       // Complete step indicator
       document.querySelectorAll(".step-item").forEach(el => el.classList.add("completed"));
 
-      // Populate Pass Card Data
+      // Populate Pass Banner Card Data
       document.getElementById("pass-avatar-img").src = state.avatarUrl;
       document.getElementById("pass-username-txt").textContent = `@${state.username}`;
       document.getElementById("pass-entry-num").textContent = `#${state.entryNumber || '1001'}`;
@@ -1444,7 +1468,7 @@
       const refLink = `${window.location.origin}${window.location.pathname}?ref=${state.username}`;
       document.getElementById("referral-link-input").value = refLink;
 
-      // Trigger Confetti
+      // Trigger Celebration Confetti
       if (window.confetti) {
         confetti({
           particleCount: 80,
@@ -1481,7 +1505,7 @@
     function shareOnX() {
       const refLink = document.getElementById("referral-link-input").value;
       const text = encodeURIComponent(
-        `Just secured my ${PROJECT_NAME} early access allowlist entry (#${state.entryNumber}).\n\nJoin the allowlist:`
+        `Just secured my ${PROJECT_NAME} early access allowlist entry (#${state.entryNumber})! 🔥\n\nJoin the allowlist:`
       );
       const url = `https://x.com/intent/tweet?text=${text}&url=${encodeURIComponent(refLink)}`;
       window.open(url, "_blank");
@@ -1491,15 +1515,22 @@
       const passNode = document.getElementById("pass-card-node");
       if (!window.html2canvas) return;
 
+      showToast("Generating high resolution banner pass...");
+
       html2canvas(passNode, {
         backgroundColor: "#07090e",
-        scale: 2
+        scale: 2,
+        useCORS: true,
+        allowTaint: true
       }).then(canvas => {
         const link = document.createElement("a");
-        link.download = `MrStonk-Pass-${state.username}.png`;
+        link.download = `MrStonk-Allowlist-Pass-${state.username}.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
-        showToast("Pass downloaded successfully.");
+        showToast("Banner Pass downloaded successfully!");
+      }).catch(err => {
+        console.error("Canvas Export Error:", err);
+        showToast("Error generating image pass.", true);
       });
     }
 
@@ -1553,7 +1584,7 @@
           });
           tbody.innerHTML = html;
         } else {
-          tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-subtle); padding: 2rem;">Connect Firebase to view live leaderboard.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-subtle); padding: 2rem;">Connect Firebase in env.js to view live leaderboard.</td></tr>`;
         }
       } catch (err) {
         console.error("Leaderboard Error:", err);
