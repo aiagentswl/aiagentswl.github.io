@@ -215,72 +215,95 @@
     }
 
     /* ==========================================
-       MINING MACHINES INFINITE MARQUEE SLIDER
+       PROJECT LOGO SHOWCASE
        ========================================== */
-    .marquee-wrapper {
+    .logo-showcase {
       width: 100%;
-      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2.25rem 0;
       background: rgba(0, 0, 0, 0.3);
       border-bottom: 1px solid var(--border-color);
-      padding: 1rem 0;
       position: relative;
+      overflow: hidden;
     }
 
-    .marquee-track {
+    .logo-showcase::before {
+      content: "";
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, var(--accent-green-glow) 0%, transparent 70%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .logo-showcase-card {
+      position: relative;
+      z-index: 1;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: var(--bg-card);
+      border: 2px solid var(--border-accent);
+      box-shadow: 0 0 25px var(--accent-green-glow), 0 0 55px rgba(0, 240, 255, 0.15);
       display: flex;
-      gap: 1.25rem;
-      width: max-content;
-      animation: marqueeScroll 35s linear infinite;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
 
-    .marquee-wrapper:hover .marquee-track {
-      animation-play-state: paused;
+    .logo-showcase-card:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 35px var(--accent-green-glow), 0 0 70px rgba(0, 240, 255, 0.25);
     }
 
-    @keyframes marqueeScroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
+    .logo-showcase-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
-    .machine-card {
-      width: 200px;
+    /* ==========================================
+       NFT GALLERY SECTION
+       ========================================== */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .gallery-item {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
       overflow: hidden;
-      flex-shrink: 0;
       transition: transform 0.2s ease, border-color 0.2s ease;
     }
 
-    .machine-card:hover {
+    .gallery-item:hover {
       transform: translateY(-4px);
       border-color: var(--accent-green);
     }
 
-    .machine-img {
+    .gallery-item img {
       width: 100%;
-      height: 160px;
+      aspect-ratio: 1 / 1;
       object-fit: cover;
       background: #000;
+      display: block;
     }
 
-    .machine-info {
-      padding: 0.75rem;
+    .gallery-item-label {
+      padding: 0.6rem;
       text-align: center;
-    }
-
-    .machine-title {
       font-family: var(--font-mono);
       font-weight: 700;
       font-size: 0.85rem;
-      color: #fff;
-    }
-
-    .machine-subtitle {
-      font-size: 0.7rem;
       color: var(--accent-green);
-      margin-top: 0.25rem;
-      font-family: var(--font-mono);
     }
 
     /* ==========================================
@@ -1004,10 +1027,13 @@
     </div>
   </header>
 
-  <!-- MINING MACHINES CAROUSEL SLIDER -->
-  <div class="marquee-wrapper">
-    <div class="marquee-track" id="marquee-track">
-      <!-- Generated Dynamically via JS (Duplicated for seamless infinite loop) -->
+  <!-- PROJECT LOGO SHOWCASE -->
+  <div class="logo-showcase">
+    <div class="logo-showcase-card">
+      <img
+        src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/icon.png"
+        alt="Mr.Stonk Logo"
+      />
     </div>
   </div>
 
@@ -1147,6 +1173,17 @@
         </button>
 
         <p class="input-helper" style="text-align: center;">Make sure you complete the required actions on X before marking them complete.</p>
+      </div>
+
+      <!-- NFT GALLERY SECTION -->
+      <div class="flow-card gallery-section">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-images"></i> Gallery</h2>
+          <p>A preview of the Mr.Stonk NFT collection.</p>
+        </div>
+        <div class="gallery-grid" id="gallery-grid">
+          <!-- Generated Dynamically via JS -->
+        </div>
       </div>
 
       <!-- STEP 3: WALLET REGISTRATION (Hidden by default) -->
@@ -1328,37 +1365,27 @@
       registeredAt: null
     };
 
-    // Render Infinite Marquee Machine Cards
-    function renderMiningMachinesMarquee() {
-      const track = document.getElementById("marquee-track");
-      if (!track) return;
+    // Render NFT Gallery Grid (numbered only, no names)
+    function renderGallery() {
+      const grid = document.getElementById("gallery-grid");
+      if (!grid) return;
 
-      const baseAssets = [];
+      let html = "";
       for (let i = 1; i <= 10; i++) {
-        baseAssets.push({
-          img: `https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/${i}.png`,
-          title: "Mining Machine",
-          sub: "4,444 Unique Machines"
-        });
-      }
-
-      // Repeat list twice for seamless CSS animation
-      const fullList = [...baseAssets, ...baseAssets];
-
-      track.innerHTML = fullList.map(item => `
-        <div class="machine-card">
-          <img src="${item.img}" alt="${item.title}" class="machine-img" loading="lazy" />
-          <div class="machine-info">
-            <div class="machine-title">${item.title}</div>
-            <div class="machine-subtitle">${item.sub}</div>
+        const num = String(i).padStart(3, "0");
+        html += `
+          <div class="gallery-item">
+            <img src="https://raw.githubusercontent.com/aiagentswl/aiagentswl.github.io/main/asset/${i}.png" alt="NFT #${num}" class="gallery-img" loading="lazy" />
+            <div class="gallery-item-label">#${num}</div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }
+      grid.innerHTML = html;
     }
 
     // On Load Initialization
     window.addEventListener("DOMContentLoaded", () => {
-      renderMiningMachinesMarquee();
+      renderGallery();
 
       // Parse Referral Parameter from URL
       const urlParams = new URLSearchParams(window.location.search);
